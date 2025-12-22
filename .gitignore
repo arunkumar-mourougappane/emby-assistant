@@ -144,6 +144,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Static assets are committed (Bootstrap, jQuery)
+# !static/
+
 # Spyder project settings
 .spyderproject
 .spyproject
