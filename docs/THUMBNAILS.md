@@ -7,6 +7,7 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 ## Features
 
 ### GTK Desktop Version
+
 - **Automatic thumbnail loading**: When viewing indexed media, movies and videos show their poster images
 - **Async loading**: Images load in the background without blocking the UI
 - **Fallback icon**: Shows a generic video icon while loading or if image unavailable
@@ -14,6 +15,7 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 - **Performance**: Threaded image downloading for smooth experience
 
 ### Web Version
+
 - **Inline thumbnails**: Movie and video items show poster images on the left
 - **Responsive layout**: Flexbox layout adjusts to content
 - **Error handling**: Falls back to film emoji (🎬) if image fails to load
@@ -23,11 +25,13 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 ## How It Works
 
 ### Image Source
+
 - Thumbnails are fetched from Emby's image API
 - URL: `/emby/Items/{ItemId}/Images/Primary`
 - Optimized: Max 150px height, 100px width, 90% quality
 
 ### GTK Implementation
+
 ```python
 # In app_gtk.py
 - GdkPixbuf used for image handling
@@ -36,15 +40,19 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 ```
 
 ### Web Implementation
+
 ```html
 <!-- In templates/index.html -->
 <div class="media-item">
-    <div class="thumbnail">
-        <img src="/api/image/{item_id}" onerror="this.parentElement.innerHTML='🎬'">
-    </div>
-    <div class="content">
-        <!-- Item details -->
-    </div>
+  <div class="thumbnail">
+    <img
+      src="/api/image/{item_id}"
+      onerror="this.parentElement.innerHTML='🎬'"
+    />
+  </div>
+  <div class="content">
+    <!-- Item details -->
+  </div>
 </div>
 ```
 
@@ -58,6 +66,7 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 ## Visual Layout
 
 ### Before
+
 ```
 [Badge] Movie Name
 📅 Added: 2025-12-22
@@ -65,6 +74,7 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 ```
 
 ### After
+
 ```
 ┌──────────┐  [Badge] Movie Name
 │          │  📅 Added: 2025-12-22
@@ -76,11 +86,13 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 ## Performance Impact
 
 ### GTK Version
+
 - **Memory**: +5-10 MB for cached thumbnails
 - **Network**: One request per movie/video (cached by Emby)
 - **CPU**: Minimal (handled in background threads)
 
 ### Web Version
+
 - **Browser cache**: Images cached automatically
 - **Network**: Same as GTK
 - **Rendering**: No noticeable impact
@@ -88,6 +100,7 @@ Both Web and GTK versions now display **thumbnails** for movies and videos in th
 ## Configuration
 
 No additional configuration needed! Works automatically if:
+
 - Emby server has media with images
 - API key has permission to access images
 - Network connectivity to Emby server
@@ -97,6 +110,7 @@ No additional configuration needed! Works automatically if:
 ### Thumbnails Not Showing
 
 **GTK Version:**
+
 1. Check terminal for error messages
 2. Verify `requests` library is installed: `pip install requests`
 3. Test image URL manually:
@@ -106,6 +120,7 @@ No additional configuration needed! Works automatically if:
    ```
 
 **Web Version:**
+
 1. Open browser console (F12) for errors
 2. Check `/api/image/{id}` endpoint responds
 3. Verify image proxy route in `app.py`
@@ -120,20 +135,23 @@ No additional configuration needed! Works automatically if:
 ## Technical Details
 
 ### GTK Image Loading Pipeline
+
 ```
-Emby API → requests.get() → BytesIO → GdkPixbuf.PixbufLoader 
+Emby API → requests.get() → BytesIO → GdkPixbuf.PixbufLoader
   → scale_simple() → GLib.idle_add() → Gtk.Image.set_from_pixbuf()
 ```
 
 ### Web Image Loading
+
 ```
-Browser → /api/image/{id} → Flask proxy → Emby API 
+Browser → /api/image/{id} → Flask proxy → Emby API
   → Response with image bytes → Browser renders
 ```
 
 ## Future Enhancements
 
 Possible improvements:
+
 - [ ] Disk cache for thumbnails (reduce API calls)
 - [ ] Thumbnail for TV episodes
 - [ ] Larger preview on hover

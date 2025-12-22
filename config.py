@@ -26,11 +26,13 @@ def validate_config():
     """Validate that required configuration is present."""
     if not EMBY_API_KEY:
         raise ValueError(
-            "EMBY_API_KEY is not set. Please create a .env file with your API key.\n"
-            "You can generate an API key from: Emby Dashboard -> Advanced -> API Keys"
+            "EMBY_API_KEY is not set. "
+            "Please create a .env file with your API key.\n"
+            "You can generate an API key from: "
+            "Emby Dashboard -> Advanced -> API Keys"
         )
-    
+
     if not EMBY_SERVER_URL:
         raise ValueError("EMBY_SERVER_URL is not set")
-    
+
     return True

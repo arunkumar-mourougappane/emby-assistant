@@ -5,8 +5,9 @@ Complete monitoring solution for Emby Media Server with **two interfaces**: Web 
 ## 🎯 What This Does
 
 Monitor your Emby server in real-time:
+
 - **Server Status**: Version, OS, online status
-- **Active Processing**: Current tasks with progress bars  
+- **Active Processing**: Current tasks with progress bars
 - **Completed Tasks**: Recently finished jobs with duration
 - **Indexed Media**: Browse recently added movies, shows, episodes
 - **All Tasks**: Complete list of scheduled tasks
@@ -28,29 +29,35 @@ pip install -r requirements.txt
 ## 📁 Project Files
 
 ### Core Application Files
+
 - **`emby_client.py`** - Emby API wrapper (shared by both versions)
 - **`config.py`** - Configuration loader (shared by both versions)
 - **`app.py`** - Flask web application (Browser UI)
 - **`app_gtk.py`** - GTK desktop application (Native UI)
 
 ### Templates & UI
+
 - **`templates/index.html`** - Web UI template with modern design
 
 ### Launchers & Scripts
+
 - **`launch.sh`** - Interactive launcher (choose version)
 - **`start.sh`** - Web version launcher
 - **`start_gtk.sh`** - GTK version launcher
 
 ### Configuration
+
 - **`.env.example`** - Configuration template
 - **`.env`** - Your actual config (create from example)
 - **`requirements.txt`** - Python dependencies
 - **`.gitignore`** - Git ignore rules
 
 ### Desktop Integration
+
 - **`emby-monitor.desktop`** - Desktop entry file for app menu
 
 ### Documentation
+
 - **`README.md`** - Main documentation
 - **`LICENSE`** - MIT License
 - **`CONTRIBUTING.md`** - Contribution guidelines
@@ -65,18 +72,19 @@ pip install -r requirements.txt
 
 ## 🎨 Two Versions, Same Power
 
-| Feature | Web Version | GTK Desktop |
-|---------|-------------|-------------|
-| **Command** | `./start.sh` | `./start_gtk.sh` |
-| **Access** | Browser at localhost:5000 | Native window |
-| **Best For** | Remote access, mobile | Local use, low resource |
-| **Dependencies** | Flask | PyGObject + GTK3 |
+| Feature          | Web Version               | GTK Desktop             |
+| ---------------- | ------------------------- | ----------------------- |
+| **Command**      | `./start.sh`              | `./start_gtk.sh`        |
+| **Access**       | Browser at localhost:5000 | Native window           |
+| **Best For**     | Remote access, mobile     | Local use, low resource |
+| **Dependencies** | Flask                     | PyGObject + GTK3        |
 
 Both versions provide identical functionality - just different interfaces!
 
 ## 🔧 Configuration
 
 Edit `.env` file:
+
 ```bash
 # Required
 EMBY_SERVER_URL=http://your-emby-server:8096
@@ -89,8 +97,9 @@ FLASK_DEBUG=True
 ```
 
 **Getting an API Key:**
+
 1. Open Emby web interface
-2. Dashboard → Advanced → API Keys  
+2. Dashboard → Advanced → API Keys
 3. Click "+ New API Key"
 4. Name it "Emby Helper"
 5. Copy key to `.env` file
@@ -98,23 +107,27 @@ FLASK_DEBUG=True
 ## 📊 Features Breakdown
 
 ### Server Status Monitor
+
 - Real-time connection indicator
 - Server name, version, OS info
 - Manual refresh button
 
 ### Current Processing (Auto-refresh: 5s)
+
 - Active tasks with progress bars
 - Task category and description
 - Start time and state
 - Color-coded badges
 
 ### Completed Tasks
+
 - Last 15 completed jobs
 - Execution duration
 - Completion timestamps
 - Success/failure status
 
 ### Indexed Media
+
 - Recently added content
 - Choose 50/100/200 items
 - Movies, series, episodes
@@ -122,6 +135,7 @@ FLASK_DEBUG=True
 - Added timestamps
 
 ### All Tasks
+
 - Complete scheduled task list
 - Current state
 - Last execution info
@@ -130,14 +144,17 @@ FLASK_DEBUG=True
 ## 🛠️ System Requirements
 
 ### Both Versions
+
 - Python 3.8+
 - Emby Server with API access
 - Linux, macOS, or Windows
 
 ### Web Version Only
+
 - Any modern web browser
 
 ### GTK Version Only (Additional)
+
 - GTK3 (gtk+-3.0)
 - PyGObject (python3-gi)
 - Linux or BSD recommended
@@ -153,6 +170,7 @@ FLASK_DEBUG=True
 ## 🎓 Usage Examples
 
 ### Web Version
+
 ```bash
 # Start web server
 ./start.sh
@@ -165,6 +183,7 @@ http://your-ip:5000
 ```
 
 ### GTK Version
+
 ```bash
 # Launch desktop app
 ./start_gtk.sh
@@ -175,6 +194,7 @@ cp emby-monitor.desktop ~/.local/share/applications/
 ```
 
 ### Both at Once
+
 ```bash
 # Terminal 1: Web version
 ./start.sh
@@ -199,6 +219,7 @@ When running web version, these endpoints are available:
 ## 🤝 Contributing Ideas
 
 Want to extend this project? Ideas:
+
 - Add notifications (desktop/email)
 - System tray icon for GTK version
 - Dark mode toggle
@@ -211,15 +232,18 @@ Want to extend this project? Ideas:
 ## ⚠️ Troubleshooting
 
 **Can't connect to server:**
+
 - Check `EMBY_SERVER_URL` in `.env`
 - Verify Emby is running
 - Test: `curl http://your-server:8096/emby/System/Info`
 
 **GTK version won't start:**
+
 - Install GTK3: `sudo apt-get install python3-gi gir1.2-gtk-3.0`
 - Use system packages: `python3 -m venv venv --system-site-packages`
 
 **No data showing:**
+
 - Verify API key is correct
 - Check Emby has media libraries
 - Look at terminal output for errors

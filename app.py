@@ -1,10 +1,14 @@
 """Flask web application for Emby monitoring."""
 
-from flask import Flask, render_template, jsonify, request
-from emby_client import EmbyClient
+# Standard library imports
 from datetime import datetime
-from typing import Dict, Any
+
+# Third-party imports
+from flask import Flask, jsonify, render_template, request
+
+# Local imports
 import config
+from emby_client import EmbyClient
 
 app = Flask(__name__)
 
@@ -27,7 +31,7 @@ def format_datetime(dt_str: str) -> str:
     try:
         dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
         return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except:
+    except (ValueError, AttributeError):
         return dt_str
 
 
@@ -49,7 +53,7 @@ def calculate_duration(start_str: str, end_str: str) -> str:
             hours = seconds // 3600
             minutes = (seconds % 3600) // 60
             return f"{hours}h {minutes}m"
-    except:
+    except (ValueError, AttributeError):
         return "N/A"
 
 
@@ -96,7 +100,9 @@ def get_current_processing():
                 "progress": round(item.get("progress", 0), 1),
                 "category": item.get("category", "Unknown"),
                 "description": item.get("description", ""),
-                "started_at": format_datetime(item.get("last_execution_time", "")),
+                "started_at": format_datetime(
+                    item.get("last_execution_time", "")
+                ),
             }
         )
 
@@ -172,8 +178,12 @@ def get_all_tasks():
                 "name": task.get("Name", "Unknown"),
                 "category": task.get("Category", "Unknown"),
                 "state": task.get("State", "Unknown"),
-                "current_progress": round(task.get("CurrentProgressPercentage", 0), 1),
-                "last_start": format_datetime(last_result.get("StartTimeUtc", "")),
+                "current_progress": round(
+                    task.get("CurrentProgressPercentage", 0), 1
+                ),
+                "last_start": format_datetime(
+                    last_result.get("StartTimeUtc", "")
+                ),
                 "last_end": format_datetime(last_result.get("EndTimeUtc", "")),
                 "last_status": last_result.get("Status", "N/A"),
             }
@@ -188,20 +198,25 @@ def get_image(item_id):
     try:
         import requests
 
-        image_url = f"{EMBY_SERVER_URL}/emby/Items/{item_id}/Images/Primary"
+        image_url = (
+            f"{config.EMBY_SERVER_URL}/emby/Items/{item_id}/Images/Primary"
+        )
         params = {"maxHeight": 150, "maxWidth": 100, "quality": 90}
         response = requests.get(
-            image_url, params=params, headers={"X-Emby-Token": EMBY_API_KEY}, timeout=5
+            image_url,
+            params=params,
+            headers={"X-Emby-Token": config.EMBY_API_KEY},
+            timeout=5
         )
         if response.status_code == 200:
-            from flask import Response
+            from flask import Response  # type: ignore
 
             return Response(
                 response.content,
                 mimetype=response.headers.get("Content-Type", "image/jpeg"),
             )
         return "", 404
-    except:
+    except Exception:
         return "", 404
 
 
@@ -218,7 +233,14 @@ if __name__ == "__main__":
         print(f"Configuration Error: {e}")
         exit(1)
 
-    print(f"Starting Emby Helper on http://{config.FLASK_HOST}:{config.FLASK_PORT}")
+    print(
+        f"Starting Emby Helper on "
+        f"http://{config.FLASK_HOST}:{config.FLASK_PORT}"
+    )
     print(f"Connecting to Emby server at: {config.EMBY_SERVER_URL}")
 
-    app.run(debug=config.FLASK_DEBUG, host=config.FLASK_HOST, port=config.FLASK_PORT)
+    app.run(
+        debug=config.FLASK_DEBUG,
+        host=config.FLASK_HOST,
+        port=config.FLASK_PORT
+    )

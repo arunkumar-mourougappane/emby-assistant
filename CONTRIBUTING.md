@@ -15,17 +15,20 @@ Thank you for your interest in contributing to Emby Helper! This document provid
 When reporting bugs, please include:
 
 1. **Version information**:
+
    - Emby Helper version (commit hash or release)
    - Python version (`python --version`)
    - OS and version
    - Emby server version
 
 2. **Steps to reproduce**:
+
    - What you did
    - What you expected to happen
    - What actually happened
 
 3. **Logs and errors**:
+
    - Error messages
    - Terminal output
    - Browser console errors (for web version)
@@ -49,17 +52,22 @@ When suggesting features:
 
 1. **Fork the repository**
 2. **Clone your fork**:
+
    ```bash
    git clone https://github.com/YOUR-USERNAME/emby-assistant.git
    cd emby-assistant
    ```
+
 3. **Set up development environment**:
+
    ```bash
    python3 -m venv venv
    source venv/bin/activate  # or venv\Scripts\activate on Windows
    pip install -r requirements.txt
    ```
+
 4. **Configure for testing**:
+
    ```bash
    cp .env.example .env
    # Edit .env with your test Emby server details
@@ -74,7 +82,7 @@ When suggesting features:
 
 ### Project Structure
 
-```
+```text
 emby-helper/
 ├── app.py              # Flask web application
 ├── app_gtk.py          # GTK desktop application
@@ -87,6 +95,7 @@ emby-helper/
 ### Making Changes
 
 1. **Create a branch**:
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -94,29 +103,34 @@ emby-helper/
    ```
 
 2. **Make your changes**:
+
    - Keep changes focused and atomic
    - Test both Web and GTK versions if applicable
    - Update documentation if needed
 
 3. **Test your changes**:
+
    - Test Web version: `python app.py`
    - Test GTK version: `python app_gtk.py`
    - Verify against a real Emby server
    - Check error handling
 
 4. **Commit your changes**:
+
    ```bash
    git add .
    git commit -m "Brief description of changes"
    ```
-   
+
    Use clear commit messages:
+
    - `Add: New feature description`
    - `Fix: Bug description`
    - `Update: What was updated`
    - `Docs: Documentation changes`
 
 5. **Push to your fork**:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -167,10 +181,12 @@ Documentation improvements are always welcome!
 For UI improvements:
 
 1. **Consider both versions**:
+
    - Web: HTML/CSS/JavaScript
    - GTK: GTK3 widgets and styling
 
 2. **Maintain consistency**:
+
    - Colors and themes
    - Layout and spacing
    - Icons and badges
@@ -202,6 +218,7 @@ Before submitting a PR, ensure:
 ### GTK Development (Linux)
 
 Install GTK development tools:
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-3.0 glade
@@ -216,6 +233,7 @@ sudo pacman -S python-gobject gtk3 glade
 ### Web Development
 
 For web UI development:
+
 - Use browser developer tools (F12)
 - Test in multiple browsers
 - Check console for JavaScript errors
@@ -237,6 +255,6 @@ Every contribution, no matter how small, helps make Emby Helper better!
 ---
 
 **Quick Links:**
-[Main README](../README.md) | 
-[Documentation](docs/INDEX.md) | 
+[Main README](../README.md) |
+[Documentation](docs/INDEX.md) |
 [Project Structure](docs/PROJECT.md)

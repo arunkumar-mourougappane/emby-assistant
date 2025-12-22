@@ -4,14 +4,14 @@ This folder contains all documentation for the Emby Helper project.
 
 ## 📑 Available Documents
 
-| Document | Description |
-|----------|-------------|
-| **[INDEX.md](INDEX.md)** | Complete documentation index with navigation |
-| **[QUICKSTART.md](QUICKSTART.md)** | Quick start guide for fast setup |
-| **[README-GTK.md](README-GTK.md)** | GTK desktop version documentation |
-| **[COMPARISON.md](COMPARISON.md)** | Web vs GTK version comparison |
-| **[THUMBNAILS.md](THUMBNAILS.md)** | Thumbnail feature documentation |
-| **[PROJECT.md](PROJECT.md)** | Project overview and structure |
+| Document                           | Description                                  |
+|------------------------------------|----------------------------------------------|
+| **[INDEX.md](INDEX.md)**           | Complete documentation index with navigation |
+| **[QUICKSTART.md](QUICKSTART.md)** | Quick start guide for fast setup             |
+| **[README-GTK.md](README-GTK.md)** | GTK desktop version documentation            |
+| **[COMPARISON.md](COMPARISON.md)** | Web vs GTK version comparison                |
+| **[THUMBNAILS.md](THUMBNAILS.md)** | Thumbnail feature documentation              |
+| **[PROJECT.md](PROJECT.md)**       | Project overview and structure               |
 
 ## 🚀 Where to Start?
 

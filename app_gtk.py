@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """GTK Desktop Application for Emby Server Monitoring."""
 
+# Standard library imports
+import threading
+from datetime import datetime
+
+# Third-party imports
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GLib, Pango, GdkPixbuf
-from emby_client import EmbyClient
-from datetime import datetime
-import config
-import threading
-import requests
-from io import BytesIO
+gi.require_version("GLib", "2.0")
+# noqa: E402 - gi.require_version must be called before importing from gi
+from gi.repository import GdkPixbuf, GLib, Gtk, Pango  # noqa: E402
+
+import requests  # noqa: E402
+
+# Local imports
+import config  # noqa: E402
+from emby_client import EmbyClient  # noqa: E402
 
 
 class EmbyMonitorApp(Gtk.Window):
@@ -37,7 +44,7 @@ class EmbyMonitorApp(Gtk.Window):
             )
             if os.path.exists(icon_path):
                 self.set_icon_from_file(icon_path)
-        except Exception as e:
+        except Exception:
             # Icon loading is non-critical
             pass
 
@@ -71,11 +78,15 @@ class EmbyMonitorApp(Gtk.Window):
 
         # Tab 1: Current Processing
         processing_box = self.create_processing_tab()
-        notebook.append_page(processing_box, Gtk.Label(label="🔄 Current Processing"))
+        notebook.append_page(
+            processing_box, Gtk.Label(label="🔄 Current Processing")
+        )
 
         # Tab 2: Completed Tasks
         completed_box = self.create_completed_tab()
-        notebook.append_page(completed_box, Gtk.Label(label="✅ Completed Tasks"))
+        notebook.append_page(
+            completed_box, Gtk.Label(label="✅ Completed Tasks")
+        )
 
         # Tab 3: Indexed Media
         media_box = self.create_media_tab()
@@ -100,7 +111,9 @@ class EmbyMonitorApp(Gtk.Window):
         frame.add(vbox)
 
         # Server status row
-        status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        status_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=10
+        )
         self.status_indicator = Gtk.Label()
         self.status_indicator.set_markup("<span size='large'>⚫</span>")
         status_box.pack_start(self.status_indicator, False, False, 0)
@@ -122,7 +135,9 @@ class EmbyMonitorApp(Gtk.Window):
         info_box.pack_start(self.os_label, False, False, 0)
 
         self.url_label = Gtk.Label()
-        self.url_label.set_markup(f"<small>URL: {config.EMBY_SERVER_URL}</small>")
+        self.url_label.set_markup(
+            f"<small>URL: {config.EMBY_SERVER_URL}</small>"
+        )
         self.url_label.set_halign(Gtk.Align.START)
         info_box.pack_start(self.url_label, False, False, 0)
 
@@ -152,7 +167,9 @@ class EmbyMonitorApp(Gtk.Window):
 
         # Auto-refresh label
         auto_label = Gtk.Label()
-        auto_label.set_markup("<small><i>Auto-refreshes every 5 seconds</i></small>")
+        auto_label.set_markup(
+            "<small><i>Auto-refreshes every 5 seconds</i></small>"
+        )
         auto_label.set_halign(Gtk.Align.END)
         vbox.pack_start(auto_label, False, False, 0)
 
@@ -188,7 +205,9 @@ class EmbyMonitorApp(Gtk.Window):
         self.media_limit_combo.append_text("100 items")
         self.media_limit_combo.append_text("200 items")
         self.media_limit_combo.set_active(0)
-        self.media_limit_combo.connect("changed", lambda w: self.load_indexed_media())
+        self.media_limit_combo.connect(
+            "changed", lambda w: self.load_indexed_media()
+        )
         hbox.pack_start(self.media_limit_combo, False, False, 0)
 
         vbox.pack_start(hbox, False, False, 0)
@@ -231,7 +250,8 @@ class EmbyMonitorApp(Gtk.Window):
         title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         badge = Gtk.Label()
         badge.set_markup(
-            f"<span background='#10b981' foreground='white' size='small'> {item['state']} </span>"
+            f"<span background='#10b981' foreground='white' "
+            f"size='small'> {item['state']} </span>"
         )
         title_box.pack_start(badge, False, False, 0)
 
@@ -246,7 +266,9 @@ class EmbyMonitorApp(Gtk.Window):
         # Category and description
         if item.get("category"):
             cat_label = Gtk.Label()
-            cat_label.set_markup(f"<small>Category: {item['category']}</small>")
+            cat_label.set_markup(
+                f"<small>Category: {item['category']}</small>"
+            )
             cat_label.set_halign(Gtk.Align.START)
             vbox.pack_start(cat_label, False, False, 0)
 
@@ -267,7 +289,9 @@ class EmbyMonitorApp(Gtk.Window):
         # Time
         if item.get("started_at"):
             time_label = Gtk.Label()
-            time_label.set_markup(f"<small>Started: {item['started_at']}</small>")
+            time_label.set_markup(
+                f"<small>Started: {item['started_at']}</small>"
+            )
             time_label.set_halign(Gtk.Align.START)
             vbox.pack_start(time_label, False, False, 0)
 
@@ -284,7 +308,8 @@ class EmbyMonitorApp(Gtk.Window):
         title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         badge = Gtk.Label()
         badge.set_markup(
-            "<span background='#3b82f6' foreground='white' size='small'> ✓ Completed </span>"
+            "<span background='#3b82f6' foreground='white' "
+            "size='small'> ✓ Completed </span>"
         )
         title_box.pack_start(badge, False, False, 0)
 
@@ -312,7 +337,9 @@ class EmbyMonitorApp(Gtk.Window):
 
         # Time
         time_label = Gtk.Label()
-        time_label.set_markup(f"<small>Completed: {task['completed_at']}</small>")
+        time_label.set_markup(
+            f"<small>Completed: {task['completed_at']}</small>"
+        )
         time_label.set_halign(Gtk.Align.START)
         vbox.pack_start(time_label, False, False, 0)
 
@@ -331,7 +358,9 @@ class EmbyMonitorApp(Gtk.Window):
         if item["type"] in ["Movie", "Video"] and item.get("id"):
             thumbnail_image = Gtk.Image()
             thumbnail_image.set_size_request(100, 150)
-            thumbnail_image.set_from_icon_name("video-x-generic", Gtk.IconSize.DIALOG)
+            thumbnail_image.set_from_icon_name(
+                "video-x-generic", Gtk.IconSize.DIALOG
+            )
             main_hbox.pack_start(thumbnail_image, False, False, 0)
 
             # Load thumbnail asynchronously
@@ -357,14 +386,19 @@ class EmbyMonitorApp(Gtk.Window):
 
         badge = Gtk.Label()
         badge.set_markup(
-            f"<span background='{color}' foreground='white' size='small'> {item['type']} </span>"
+            f"<span background='{color}' foreground='white' "
+            f"size='small'> {item['type']} </span>"
         )
         title_box.pack_start(badge, False, False, 0)
 
         # Format display name
         display_name = item["name"]
         if item["type"] == "Episode" and item.get("series_name"):
-            display_name = f"{item['series_name']} - S{item.get('season', '?')}E{item.get('episode', '?')} - {item['name']}"
+            display_name = (
+                f"{item['series_name']} - "
+                f"S{item.get('season', '?')}E{item.get('episode', '?')} - "
+                f"{item['name']}"
+            )
 
         title = Gtk.Label(label=display_name)
         title.set_halign(Gtk.Align.START)
@@ -412,7 +446,8 @@ class EmbyMonitorApp(Gtk.Window):
 
         badge = Gtk.Label()
         badge.set_markup(
-            f"<span background='{color}' foreground='white' size='small'> {task['state']} </span>"
+            f"<span background='{color}' foreground='white' "
+            f"size='small'> {task['state']} </span>"
         )
         title_box.pack_start(badge, False, False, 0)
 
@@ -442,7 +477,8 @@ class EmbyMonitorApp(Gtk.Window):
         if task.get("last_end") and task["last_end"] != "N/A":
             exec_label = Gtk.Label()
             exec_label.set_markup(
-                f"<small>Last completed: {task['last_end']} ({task['last_status']})</small>"
+                f"<small>Last completed: {task['last_end']} "
+                f"({task['last_status']})</small>"
             )
             exec_label.set_halign(Gtk.Align.START)
             vbox.pack_start(exec_label, False, False, 0)
@@ -454,11 +490,16 @@ class EmbyMonitorApp(Gtk.Window):
         """Load thumbnail image for a media item asynchronously."""
         try:
             # Get image URL from Emby
-            image_url = f"{config.EMBY_SERVER_URL}/emby/Items/{item_id}/Images/Primary?maxHeight=150&maxWidth=100&quality=90"
+            image_url = (
+                f"{config.EMBY_SERVER_URL}/emby/Items/{item_id}/"
+                f"Images/Primary?maxHeight=150&maxWidth=100&quality=90"
+            )
 
             # Download image
             response = requests.get(
-                image_url, headers={"X-Emby-Token": config.EMBY_API_KEY}, timeout=5
+                image_url,
+                headers={"X-Emby-Token": config.EMBY_API_KEY},
+                timeout=5
             )
 
             if response.status_code == 200:
@@ -487,7 +528,7 @@ class EmbyMonitorApp(Gtk.Window):
 
                     # Update image widget on main thread
                     GLib.idle_add(image_widget.set_from_pixbuf, scaled_pixbuf)
-        except Exception as e:
+        except Exception:
             # If image load fails, keep the default icon
             pass
 
@@ -498,7 +539,7 @@ class EmbyMonitorApp(Gtk.Window):
         try:
             dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
             return dt.strftime("%Y-%m-%d %H:%M:%S")
-        except:
+        except (ValueError, AttributeError):
             return dt_str
 
     def calculate_duration(self, start_str, end_str):
@@ -519,7 +560,7 @@ class EmbyMonitorApp(Gtk.Window):
                 hours = seconds // 3600
                 minutes = (seconds % 3600) // 60
                 return f"{hours}h {minutes}m"
-        except:
+        except (ValueError, AttributeError):
             return "N/A"
 
     def load_server_status(self):
@@ -553,7 +594,9 @@ class EmbyMonitorApp(Gtk.Window):
             self.update_statusbar("Server status updated")
             return False
 
-        threading.Thread(target=lambda: GLib.idle_add(update_ui), daemon=True).start()
+        threading.Thread(
+            target=lambda: GLib.idle_add(update_ui), daemon=True
+        ).start()
 
     def load_current_processing(self):
         """Load currently processing media."""
@@ -589,7 +632,9 @@ class EmbyMonitorApp(Gtk.Window):
             self.processing_listbox.show_all()
             return False
 
-        threading.Thread(target=lambda: GLib.idle_add(update_ui), daemon=True).start()
+        threading.Thread(
+            target=lambda: GLib.idle_add(update_ui), daemon=True
+        ).start()
 
     def load_completed_tasks(self):
         """Load recently completed tasks."""
@@ -612,9 +657,12 @@ class EmbyMonitorApp(Gtk.Window):
                         "name": task.get("name", "Unknown"),
                         "category": task.get("category", "Unknown"),
                         "status": task.get("status", "Unknown"),
-                        "completed_at": self.format_datetime(task.get("end_time", "")),
+                        "completed_at": self.format_datetime(
+                            task.get("end_time", "")
+                        ),
                         "duration": self.calculate_duration(
-                            task.get("start_time", ""), task.get("end_time", "")
+                            task.get("start_time", ""),
+                            task.get("end_time", "")
                         ),
                     }
                     self.completed_listbox.add(
@@ -624,7 +672,9 @@ class EmbyMonitorApp(Gtk.Window):
             self.completed_listbox.show_all()
             return False
 
-        threading.Thread(target=lambda: GLib.idle_add(update_ui), daemon=True).start()
+        threading.Thread(
+            target=lambda: GLib.idle_add(update_ui), daemon=True
+        ).start()
 
     def load_indexed_media(self):
         """Load indexed media."""
@@ -651,19 +701,25 @@ class EmbyMonitorApp(Gtk.Window):
                         "id": item.get("Id", ""),
                         "name": item.get("Name", "Unknown"),
                         "type": item.get("Type", "Unknown"),
-                        "added_at": self.format_datetime(item.get("DateCreated", "")),
+                        "added_at": self.format_datetime(
+                            item.get("DateCreated", "")
+                        ),
                         "path": item.get("Path", "N/A"),
                         "series_name": item.get("SeriesName", ""),
                         "season": item.get("ParentIndexNumber", ""),
                         "episode": item.get("IndexNumber", ""),
                     }
-                    self.media_listbox.add(self.create_media_row(formatted_item))
+                    self.media_listbox.add(
+                        self.create_media_row(formatted_item)
+                    )
 
             self.media_listbox.show_all()
             self.update_statusbar(f"Loaded {len(items)} media items")
             return False
 
-        threading.Thread(target=lambda: GLib.idle_add(update_ui), daemon=True).start()
+        threading.Thread(
+            target=lambda: GLib.idle_add(update_ui), daemon=True
+        ).start()
 
     def load_all_tasks(self):
         """Load all scheduled tasks."""
@@ -698,12 +754,16 @@ class EmbyMonitorApp(Gtk.Window):
                         ),
                         "last_status": last_result.get("Status", "N/A"),
                     }
-                    self.tasks_listbox.add(self.create_task_row(formatted_task))
+                    self.tasks_listbox.add(
+                        self.create_task_row(formatted_task)
+                    )
 
             self.tasks_listbox.show_all()
             return False
 
-        threading.Thread(target=lambda: GLib.idle_add(update_ui), daemon=True).start()
+        threading.Thread(
+            target=lambda: GLib.idle_add(update_ui), daemon=True
+        ).start()
 
     def refresh_all(self):
         """Refresh all data."""
@@ -717,16 +777,21 @@ class EmbyMonitorApp(Gtk.Window):
     def start_refresh_timers(self):
         """Start auto-refresh timers."""
         # Refresh processing every 5 seconds
-        GLib.timeout_add_seconds(5, lambda: (self.load_current_processing(), True)[1])
+        GLib.timeout_add_seconds(
+            5, lambda: (self.load_current_processing(), True)[1]
+        )
 
         # Refresh status every 30 seconds
-        GLib.timeout_add_seconds(30, lambda: (self.load_server_status(), True)[1])
+        GLib.timeout_add_seconds(
+            30, lambda: (self.load_server_status(), True)[1]
+        )
 
     def update_statusbar(self, message):
         """Update statusbar message."""
         self.statusbar.pop(self.statusbar_context)
         self.statusbar.push(
-            self.statusbar_context, f"{message} - {datetime.now().strftime('%H:%M:%S')}"
+            self.statusbar_context,
+            f"{message} - {datetime.now().strftime('%H:%M:%S')}"
         )
 
     def show_error_dialog(self, message):
