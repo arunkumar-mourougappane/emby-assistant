@@ -31,15 +31,15 @@ Monitor your Emby server with real-time information about server status, pending
 
 2. Install dependencies:
 
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 3. Configure your Emby connection:
 
-```bash
-cp .env.example .env
-```
+   ```bash
+   cp .env.example .env
+   ```
 
 4. Edit the `.env` file with your Emby server details:
    - `EMBY_SERVER_URL`: Your Emby server URL (e.g., `http://192.168.1.100:8096`)
