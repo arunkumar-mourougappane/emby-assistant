@@ -234,7 +234,7 @@ if __name__ == "__main__":
         exit(1)
 
     print(
-        f"Starting Emby Helper on "
+        f"Starting Emby Assistant on "
         f"http://{config.FLASK_HOST}:{config.FLASK_PORT}"
     )
     print(f"Connecting to Emby server at: {config.EMBY_SERVER_URL}")

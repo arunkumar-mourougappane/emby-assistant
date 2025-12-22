@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Emby Helper GTK Desktop Application Startup Script
+# Emby Assistant GTK Desktop Application Startup Script
 
 echo "====================================="
-echo "  Emby Server Monitor (GTK Desktop)"
+echo "  Emby Assistant (GTK Desktop)"
 echo "====================================="
 echo ""
 
@@ -57,7 +57,7 @@ echo "Installing Python dependencies..."
 pip install -q requests python-dotenv
 
 echo ""
-echo "Starting Emby Helper GTK Application..."
+echo "Starting Emby Assistant GTK Application..."
 echo ""
 echo "Press Ctrl+C in this terminal to stop the application"
 echo ""

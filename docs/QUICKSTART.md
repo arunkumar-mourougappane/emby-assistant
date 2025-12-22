@@ -61,7 +61,7 @@ EMBY_API_KEY=your_api_key_here
 1. Open Emby web interface
 2. Dashboard → Advanced → API Keys
 3. Click "+ New API Key"
-4. Name it "Emby Helper" and copy the key
+4. Name it "Emby Assistant" and copy the key
 
 ### 3. Run the Application
 

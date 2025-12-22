@@ -1,4 +1,4 @@
-# Emby Helper - GTK Desktop Version
+# Emby Assistant - GTK Desktop Version
 
 A native GTK3 desktop application for monitoring your Emby server with a beautiful, responsive interface.
 
@@ -97,7 +97,7 @@ Install the desktop entry for your applications menu:
 cp emby-monitor.desktop ~/.local/share/applications/
 ```
 
-Then launch "Emby Server Monitor" from your applications menu.
+Then launch "Emby Assistant" from your applications menu.
 
 ## Usage
 

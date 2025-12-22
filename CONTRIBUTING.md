@@ -1,6 +1,6 @@
-# Contributing to Emby Helper
+# Contributing to Emby Assistant
 
-Thank you for your interest in contributing to Emby Helper! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to Emby Assistant! This document provides guidelines for contributing to the project.
 
 ## 🤝 Ways to Contribute
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GTK Desktop Application for Emby Server Monitoring."""
+"""GTK Desktop Application for Emby Assistant."""
 
 # Standard library imports
 import threading
@@ -25,7 +25,7 @@ class EmbyMonitorApp(Gtk.Window):
 
     def __init__(self):
         """Initialize the GTK application."""
-        super().__init__(title="Emby Server Monitor")
+        super().__init__(title="Emby Assistant")
 
         # Initialize Emby client
         try:

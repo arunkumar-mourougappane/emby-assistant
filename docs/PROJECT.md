@@ -1,4 +1,4 @@
-# 📦 Emby Helper - Project Overview
+# 📦 Emby Assistant - Project Overview
 
 Complete monitoring solution for Emby Media Server with **two interfaces**: Web UI and GTK Desktop.
 
@@ -101,7 +101,7 @@ FLASK_DEBUG=True
 1. Open Emby web interface
 2. Dashboard → Advanced → API Keys
 3. Click "+ New API Key"
-4. Name it "Emby Helper"
+4. Name it "Emby Assistant"
 5. Copy key to `.env` file
 
 ## 📊 Features Breakdown

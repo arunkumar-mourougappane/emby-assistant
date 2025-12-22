@@ -1,6 +1,6 @@
 # Documentation
 
-This folder contains all documentation for the Emby Helper project.
+This folder contains all documentation for the Emby Assistant project.
 
 ## 📑 Available Documents
 

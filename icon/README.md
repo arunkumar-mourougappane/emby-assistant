@@ -1,4 +1,4 @@
-# Emby Helper Icons
+# Emby Assistant Icons
 
 This folder contains the application icons in various sizes and formats.
 
@@ -83,4 +83,4 @@ The icons feature:
 
 ## License
 
-Icons are part of the Emby Helper project and follow the same MIT License.
+Icons are part of the Emby Assistant project and follow the same MIT License.

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Emby Helper Startup Script
+# Emby Assistant Startup Script
 
 echo "====================================="
-echo "  Emby Server Monitor"
+echo "  Emby Assistant"
 echo "====================================="
 echo ""
 
@@ -35,7 +35,7 @@ echo "Installing dependencies..."
 pip install -q -r requirements.txt
 
 echo ""
-echo "Starting Emby Helper..."
+echo "Starting Emby Assistant..."
 echo "Access the dashboard at: http://localhost:5000"
 echo ""
 echo "Press Ctrl+C to stop the server"

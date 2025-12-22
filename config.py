@@ -1,5 +1,5 @@
 """
-Configuration loader for Emby Helper application.
+Configuration loader for Emby Assistant application.
 Loads configuration from environment variables or .env file.
 """
 import os

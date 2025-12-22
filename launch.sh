@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Emby Helper - Version Launcher
+# Emby Assistant - Version Launcher
 # Choose between Web UI and GTK Desktop version
 
 clear
 echo "╔═══════════════════════════════════════╗"
-echo "║    Emby Server Monitor Launcher      ║"
+echo "║      Emby Assistant Launcher          ║"
 echo "╚═══════════════════════════════════════╝"
 echo ""
 echo "Which version would you like to run?"

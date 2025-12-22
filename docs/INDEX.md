@@ -1,6 +1,6 @@
 # Documentation Index
 
-Welcome to the Emby Helper documentation! This guide will help you find the information you need.
+Welcome to the Emby Assistant documentation! This guide will help you find the information you need.
 
 ## 📚 Documentation Structure
 

@@ -1,4 +1,4 @@
-# Emby Helper - Server Monitor
+# Emby Assistant
 
 Monitor your Emby server with real-time information about server status, pending jobs, currently processing media, and recently indexed content.
 
@@ -52,7 +52,7 @@ Monitor your Emby server with real-time information about server status, pending
 3. Click on **Advanced** in the left sidebar
 4. Click on **API Keys**
 5. Click **+ New API Key**
-6. Enter an application name (e.g., "Emby Helper")
+6. Enter an application name (e.g., "Emby Assistant")
 7. Copy the generated API key to your `.env` file
 
 ## Usage
