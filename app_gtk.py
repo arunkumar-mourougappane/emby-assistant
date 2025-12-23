@@ -10,6 +10,7 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("GLib", "2.0")
+gi.require_version("GdkPixbuf", "2.0")
 # noqa: E402 - gi.require_version must be called before importing from gi
 from gi.repository import GdkPixbuf, GLib, Gtk, Pango  # noqa: E402
 
@@ -63,6 +64,12 @@ class EmbyMonitorApp(Gtk.Window):
 
     def create_ui(self):
         """Create the user interface."""
+        # Initialize progress bar early so it's available for load_* calls
+        self.main_progress_bar = Gtk.ProgressBar()
+        self.main_progress_bar.set_pulse_step(0.1)
+        self.main_progress_bar.set_no_show_all(True) # Hidden by default
+        self.main_progress_bar.hide()
+
         # Main vertical box
         main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.add(main_vbox)
@@ -88,22 +95,45 @@ class EmbyMonitorApp(Gtk.Window):
             completed_box, Gtk.Label(label="✅ Completed Tasks")
         )
 
-        # Tab 3: Movies Browser
+        # Tab 3: Media Browser
         movies_box = self.create_movies_tab()
-        notebook.append_page(movies_box, Gtk.Label(label="🎬 Movies"))
+        notebook.append_page(movies_box, Gtk.Label(label="🎬 Media"))
 
-        # Tab 4: Indexed Media
+        # Tab 4: Cast Explorer
+        cast_box = self.create_cast_tab()
+        notebook.append_page(cast_box, Gtk.Label(label="👥 Cast"))
+
+        # Tab 5: Indexed Media
         media_box = self.create_media_tab()
         notebook.append_page(media_box, Gtk.Label(label="📁 Indexed Media"))
 
-        # Tab 5: All Tasks
+        # Tab 6: All Tasks
         tasks_box = self.create_all_tasks_tab()
         notebook.append_page(tasks_box, Gtk.Label(label="📋 All Tasks"))
 
         # Status bar
         self.statusbar = Gtk.Statusbar()
         self.statusbar_context = self.statusbar.get_context_id("main")
+        
+        main_vbox.pack_start(self.main_progress_bar, False, False, 0)
         main_vbox.pack_start(self.statusbar, False, False, 0)
+
+    def show_progress(self):
+        """Show main progress bar."""
+        self.main_progress_bar.show()
+        self.main_progress_timer = GLib.timeout_add(100, self._pulse_progress)
+
+    def hide_progress(self):
+        """Hide main progress bar."""
+        self.main_progress_bar.hide()
+        if hasattr(self, 'main_progress_timer') and self.main_progress_timer:
+             GLib.source_remove(self.main_progress_timer)
+             self.main_progress_timer = None
+
+    def _pulse_progress(self):
+        """Pulse the progress bar."""
+        self.main_progress_bar.pulse()
+        return True
 
     def create_header(self):
         """Create header with server information."""
@@ -144,6 +174,16 @@ class EmbyMonitorApp(Gtk.Window):
         )
         self.url_label.set_halign(Gtk.Align.START)
         info_box.pack_start(self.url_label, False, False, 0)
+
+        # Time label
+        self.time_label = Gtk.Label()
+        self.time_label.set_markup("<small>🕒 --:--:--</small>")
+        self.time_label.set_halign(Gtk.Align.END)
+        
+        # Spacer to push time to the right
+        spacer = Gtk.Label()
+        info_box.pack_start(spacer, True, True, 0)
+        info_box.pack_start(self.time_label, False, False, 0)
 
         vbox.pack_start(info_box, False, False, 0)
 
@@ -236,42 +276,6 @@ class EmbyMonitorApp(Gtk.Window):
 
         return vbox
 
-    def create_movies_tab(self):
-        """Create the movies browser tab."""
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        vbox.set_border_width(10)
-
-        # Library selector
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        label = Gtk.Label(label="Library:")
-        hbox.pack_start(label, False, False, 0)
-
-        self.library_combo = Gtk.ComboBoxText()
-        self.library_combo.append("all", "All Movies")
-        self.library_combo.set_active(0)
-        self.library_combo.connect("changed", lambda w: self.load_movies())
-        hbox.pack_start(self.library_combo, False, False, 0)
-
-        vbox.pack_start(hbox, False, False, 0)
-
-        # Scrolled window with horizontal and vertical scrolling
-        scrolled = Gtk.ScrolledWindow()
-        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-
-        # FlowBox for grid layout of movie posters
-        self.movies_flowbox = Gtk.FlowBox()
-        self.movies_flowbox.set_valign(Gtk.Align.START)
-        self.movies_flowbox.set_max_children_per_line(6)
-        self.movies_flowbox.set_min_children_per_line(2)
-        self.movies_flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.movies_flowbox.set_homogeneous(True)
-        self.movies_flowbox.set_column_spacing(15)
-        self.movies_flowbox.set_row_spacing(15)
-        scrolled.add(self.movies_flowbox)
-
-        vbox.pack_start(scrolled, True, True, 0)
-
-        return vbox
 
     def create_all_tasks_tab(self):
         """Create the all tasks tab."""
@@ -362,10 +366,10 @@ class EmbyMonitorApp(Gtk.Window):
         )
         title_box.pack_start(badge, False, False, 0)
 
-        title = Gtk.Label(label=task["name"])
+        title = Gtk.Label()
+        title.set_markup(f"<span weight='bold' size='11000'>{GLib.markup_escape_text(task['name'])}</span>")
         title.set_halign(Gtk.Align.START)
         title.set_line_wrap(True)
-        title.modify_font(Pango.FontDescription("bold 11"))
         title_box.pack_start(title, False, False, 0)
 
         vbox.pack_start(title_box, False, False, 0)
@@ -374,7 +378,7 @@ class EmbyMonitorApp(Gtk.Window):
         info_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=15)
 
         cat_label = Gtk.Label()
-        cat_label.set_markup(f"<small>Category: {task['category']}</small>")
+        cat_label.set_markup(f"<small>Category: {GLib.markup_escape_text(task['category'])}</small>")
         info_box.pack_start(cat_label, False, False, 0)
 
         dur_label = Gtk.Label()
@@ -425,18 +429,19 @@ class EmbyMonitorApp(Gtk.Window):
             ).start()
 
         # Movie title
-        title_label = Gtk.Label(label=movie.get("Name", "Unknown"))
+        title_text = GLib.markup_escape_text(movie.get("Name", "Unknown"))
+        title_label = Gtk.Label()
+        title_label.set_markup(f"<span font='bold 10'>{title_text}</span>")
         title_label.set_halign(Gtk.Align.CENTER)
         title_label.set_line_wrap(True)
         title_label.set_max_width_chars(20)
-        title_label.modify_font(Pango.FontDescription("bold 10"))
         vbox.pack_start(title_label, False, False, 0)
 
         # Year
         if movie.get("ProductionYear"):
-            year_label = Gtk.Label(label=str(movie["ProductionYear"]))
+            year_label = Gtk.Label()
+            year_label.set_markup(f"<span font='9'>{movie['ProductionYear']}</span>")
             year_label.set_halign(Gtk.Align.CENTER)
-            year_label.modify_font(Pango.FontDescription("9"))
             vbox.pack_start(year_label, False, False, 0)
 
         # Rating
@@ -532,10 +537,10 @@ class EmbyMonitorApp(Gtk.Window):
                 f"{item['name']}"
             )
 
-        title = Gtk.Label(label=display_name)
+        title = Gtk.Label()
+        title.set_markup(f"<span weight='bold' size='10240'>{GLib.markup_escape_text(display_name)}</span>")
         title.set_halign(Gtk.Align.START)
         title.set_line_wrap(True)
-        title.modify_font(Pango.FontDescription("bold 10"))
         title_box.pack_start(title, False, False, 0)
 
         vbox.pack_start(title_box, False, False, 0)
@@ -583,17 +588,17 @@ class EmbyMonitorApp(Gtk.Window):
         )
         title_box.pack_start(badge, False, False, 0)
 
-        title = Gtk.Label(label=task["name"])
+        title = Gtk.Label()
+        title.set_markup(f"<span weight='bold' size='10240'>{GLib.markup_escape_text(task['name'])}</span>")
         title.set_halign(Gtk.Align.START)
         title.set_line_wrap(True)
-        title.modify_font(Pango.FontDescription("bold 10"))
         title_box.pack_start(title, False, False, 0)
 
         vbox.pack_start(title_box, False, False, 0)
 
         # Category
         cat_label = Gtk.Label()
-        cat_label.set_markup(f"<small>Category: {task['category']}</small>")
+        cat_label.set_markup(f"<small>Category: {GLib.markup_escape_text(task['category'])}</small>")
         cat_label.set_halign(Gtk.Align.START)
         vbox.pack_start(cat_label, False, False, 0)
 
@@ -722,44 +727,62 @@ class EmbyMonitorApp(Gtk.Window):
     def load_server_status(self):
         """Load server status information."""
 
-        def update_ui():
-            system_info = self.emby.get_system_info()
+    def load_server_status(self):
+        """Load server status information."""
+        def worker():
+             try:
+                 system_info = self.emby.get_system_info()
+                 GLib.idle_add(on_worker_done, system_info)
+             except Exception:
+                 GLib.idle_add(on_worker_done, None)
 
+        def on_worker_done(system_info):
             if not system_info:
-                self.status_indicator.set_markup(
-                    "<span size='large' foreground='red'>⚫</span>"
-                )
-                self.server_name_label.set_markup(
-                    "<span foreground='red'>Could not connect to server</span>"
-                )
+                if hasattr(self, 'status_indicator'):
+                    self.status_indicator.set_markup(
+                        "<span size='large' foreground='red'>⚫</span>"
+                    )
+                if hasattr(self, 'server_name_label'):
+                    self.server_name_label.set_markup(
+                        "<span foreground='red'>Could not connect to server</span>"
+                    )
                 return False
 
-            self.status_indicator.set_markup(
-                "<span size='large' foreground='green'>🟢</span>"
-            )
-            self.server_name_label.set_markup(
-                f"<b>{system_info.get('ServerName', 'Unknown')}</b>"
-            )
-            self.version_label.set_text(
-                f"Version: {system_info.get('Version', 'Unknown')}"
-            )
-            self.os_label.set_text(
-                f"OS: {system_info.get('OperatingSystem', 'Unknown')}"
-            )
+            if hasattr(self, 'status_indicator'):
+                self.status_indicator.set_markup(
+                    "<span size='large' foreground='green'>🟢</span>"
+                )
+            if hasattr(self, 'server_name_label'):
+                self.server_name_label.set_markup(
+                    f"<b>{system_info.get('ServerName', 'Unknown')}</b>"
+                )
+            if hasattr(self, 'version_label'):
+                self.version_label.set_text(
+                    f"Version: {system_info.get('Version', 'Unknown')}"
+                )
+            if hasattr(self, 'os_label'):
+                self.os_label.set_text(
+                    f"OS: {system_info.get('OperatingSystem', 'Unknown')}"
+                )
 
             self.update_statusbar("Server status updated")
             return False
 
-        threading.Thread(
-            target=lambda: GLib.idle_add(update_ui), daemon=True
-        ).start()
+        threading.Thread(target=worker, daemon=True).start()
 
     def load_current_processing(self):
         """Load currently processing media."""
 
-        def update_ui():
-            processing = self.emby.get_processing_media()
+    def load_current_processing(self):
+        """Load currently processing media."""
+        def worker():
+            try:
+                processing = self.emby.get_processing_media()
+                GLib.idle_add(on_worker_done, processing)
+            except Exception as e:
+                print(f"Error loading processing: {e}")
 
+        def on_worker_done(processing):
             # Clear existing items
             for child in self.processing_listbox.get_children():
                 self.processing_listbox.remove(child)
@@ -788,16 +811,21 @@ class EmbyMonitorApp(Gtk.Window):
             self.processing_listbox.show_all()
             return False
 
-        threading.Thread(
-            target=lambda: GLib.idle_add(update_ui), daemon=True
-        ).start()
+        threading.Thread(target=worker, daemon=True).start()
 
     def load_completed_tasks(self):
         """Load recently completed tasks."""
 
-        def update_ui():
-            completed = self.emby.get_completed_tasks(limit=15)
+    def load_completed_tasks(self):
+        """Load recently completed tasks."""
+        def worker():
+            try:
+                completed = self.emby.get_completed_tasks(limit=15)
+                GLib.idle_add(on_worker_done, completed)
+            except Exception as e:
+                 print(f"Error loading completed tasks: {e}")
 
+        def on_worker_done(completed):
             # Clear existing items
             for child in self.completed_listbox.get_children():
                 self.completed_listbox.remove(child)
@@ -828,82 +856,180 @@ class EmbyMonitorApp(Gtk.Window):
             self.completed_listbox.show_all()
             return False
 
-        threading.Thread(
-            target=lambda: GLib.idle_add(update_ui), daemon=True
-        ).start()
+        threading.Thread(target=worker, daemon=True).start()
+
+    def create_movies_tab(self):
+        """Create the movies browser tab."""
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        vbox.set_border_width(10)
+
+        # Controls box
+        controls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        
+        # Library selector
+        label = Gtk.Label(label="Library:")
+        controls_box.pack_start(label, False, False, 0)
+
+        self.library_combo = Gtk.ComboBoxText()
+        self.library_combo.append("all", "All Libraries")
+        self.library_combo.set_active(0)
+        self.library_combo.set_active(0)
+        self.library_combo.connect("changed", lambda w: self.load_movies())
+        controls_box.pack_start(self.library_combo, False, False, 0)
+
+        # Search bar
+        search_entry = Gtk.SearchEntry()
+        search_entry.set_placeholder_text("Search media...")
+        search_entry.connect("search-changed", self.on_movie_search_changed)
+        controls_box.pack_start(search_entry, True, True, 0)
+
+        vbox.pack_start(controls_box, False, False, 0)
+
+        # Scrolled window
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+
+        # FlowBox with better spacing
+        self.movies_flowbox = Gtk.FlowBox()
+        self.movies_flowbox.set_valign(Gtk.Align.START)
+        self.movies_flowbox.set_max_children_per_line(6)
+        self.movies_flowbox.set_min_children_per_line(2)
+        self.movies_flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.movies_flowbox.set_homogeneous(True)
+        self.movies_flowbox.set_column_spacing(20)
+        self.movies_flowbox.set_row_spacing(20)
+        scrolled.add(self.movies_flowbox)
+
+        vbox.pack_start(scrolled, True, True, 0)
+
+        # Initial Load
+        self.load_libraries()
+        self.load_movies()
+
+        return vbox
+
+    def on_movie_search_changed(self, entry):
+        """Handle movie search."""
+        query = entry.get_text()
+        self.load_movies(query)
 
     def load_libraries(self):
-        """Load movie libraries into combo box."""
+        """Load libraries into combo box."""
+        def worker():
+            try:
+                libraries = self.emby.get_libraries()
+                # Sort libraries by name
+                libraries.sort(key=lambda x: x.get("Name", "").lower())
+                GLib.idle_add(on_worker_done, libraries)
+            except Exception as e:
+                 print(f"Error loading libraries: {e}")
 
-        def update_ui():
-            libraries = self.emby.get_libraries()
+        def on_worker_done(libraries):
+            # Store library data for type lookups
+            self.library_map = {lib["ItemId"]: lib for lib in libraries}
 
-            # Filter to only movie libraries
-            movie_libraries = [
-                lib for lib in libraries if lib.get("CollectionType") == "movies"
-            ]
-
-            # Clear existing library items (except "All Movies")
+            # preserve active selection if possible, else reset
+            active_id = self.library_combo.get_active_id()
+            
             self.library_combo.remove_all()
-            self.library_combo.append("all", "All Movies")
-
-            # Add library options
-            for lib in movie_libraries:
-                lib_id = lib.get("ItemId", "")
-                lib_name = lib.get("Name", "Unknown")
-                self.library_combo.append(lib_id, lib_name)
-
-            # Set to "All Movies" by default
-            self.library_combo.set_active(0)
+            self.library_combo.append("all", "All Libraries")
+            
+            for lib in libraries:
+                self.library_combo.append(lib.get("ItemId"), lib.get("Name", "Unknown"))
+            
+            if active_id:
+                self.library_combo.set_active_id(active_id)
+            if not self.library_combo.get_active_id():
+                self.library_combo.set_active(0)
+                
             return False
 
-        threading.Thread(
-            target=lambda: GLib.idle_add(update_ui), daemon=True
-        ).start()
+        threading.Thread(target=worker, daemon=True).start()
 
-    def load_movies(self):
+    def load_movies(self, query=None):
         """Load movies browser."""
+        self.show_progress()
 
-        def update_ui():
-            # Get selected library
-            library_id = self.library_combo.get_active_id()
-            parent_id = None if library_id == "all" else library_id
+        # Capture state on main thread
+        library_id = self.library_combo.get_active_id()
+        parent_id = None if library_id == "all" else library_id
+        
+        # Smart Type Filtering
+        include_types = "Movie,Series,season,episode,BoxSet,MusicAlbum,Audio,Video" # Default Fallback
+        
+        if library_id == "all":
+             # All Libraries: Content Focus
+             include_types = "Movie,Series,BoxSet"
+        elif hasattr(self, 'library_map') and library_id in self.library_map:
+             # Specific Library: Type Focus
+             lib_type = self.library_map[library_id].get("CollectionType", "").lower()
+             if lib_type == "movies":
+                 include_types = "Movie,BoxSet"
+             elif lib_type == "tvshows":
+                 include_types = "Series"
+             elif lib_type == "music":
+                 include_types = "MusicAlbum,Audio"
+             # else keep default (mixed)
 
-            # Fetch movies with library filter
-            movies = self.emby.get_movies_by_library(parent_id=parent_id, limit=200)
+        def worker():
+            try:
+                # Run blocking call in background thread
+                media = self.emby.get_items_by_library(
+                    parent_id=parent_id, 
+                    limit=200, 
+                    search_term=query,
+                    include_item_types=include_types
+                )
+                # Schedule UI update on main thread
+                GLib.idle_add(on_worker_done, media)
+            except Exception as e:
+                print(f"Error loading movies: {e}")
+                GLib.idle_add(self.hide_progress)
 
+        def on_worker_done(media):
             # Clear existing items
             for child in self.movies_flowbox.get_children():
                 self.movies_flowbox.remove(child)
 
-            if not movies:
-                label = Gtk.Label(label="🎬 No movies found")
+            if not media:
+                label = Gtk.Label(label="🎬 No media found")
                 label.set_margin_top(50)
                 label.set_margin_bottom(50)
                 self.movies_flowbox.add(label)
             else:
-                for movie in movies:
-                    movie_card = self.create_movie_card(movie)
-                    self.movies_flowbox.add(movie_card)
+                for item in media:
+                    card = self.create_movie_card(item)
+                    self.movies_flowbox.add(card)
 
+            self.update_statusbar(f"Loaded {len(media)} items")
+            self.hide_progress()
             self.movies_flowbox.show_all()
-            self.update_statusbar(f"Loaded {len(movies)} movies")
             return False
 
-        threading.Thread(
-            target=lambda: GLib.idle_add(update_ui), daemon=True
-        ).start()
+        threading.Thread(target=worker, daemon=True).start()
 
     def load_indexed_media(self):
         """Load indexed media."""
+        self.show_progress()
 
-        def update_ui():
-            # Get limit from combo box
-            limits = {0: 50, 1: 100, 2: 200}
-            limit = limits.get(self.media_limit_combo.get_active(), 50)
+    def load_indexed_media(self):
+        """Load indexed media."""
+        self.show_progress()
 
-            items = self.emby.get_recently_added(limit=limit)
+        # Capture state
+        limit_idx = self.media_limit_combo.get_active()
+        limits = {0: 50, 1: 100, 2: 200}
+        limit = limits.get(limit_idx, 50)
 
+        def worker():
+            try:
+                items = self.emby.get_recently_added(limit=limit)
+                GLib.idle_add(on_worker_done, items)
+            except Exception as e:
+                print(f"Error loading indexed media: {e}")
+                GLib.idle_add(self.hide_progress)
+
+        def on_worker_done(items):
             # Clear existing items
             for child in self.media_listbox.get_children():
                 self.media_listbox.remove(child)
@@ -933,18 +1059,21 @@ class EmbyMonitorApp(Gtk.Window):
 
             self.media_listbox.show_all()
             self.update_statusbar(f"Loaded {len(items)} media items")
+            self.hide_progress()
             return False
 
-        threading.Thread(
-            target=lambda: GLib.idle_add(update_ui), daemon=True
-        ).start()
+        threading.Thread(target=worker, daemon=True).start()
 
     def load_all_tasks(self):
         """Load all scheduled tasks."""
+        def worker():
+             try:
+                 tasks = self.emby.get_scheduled_tasks()
+                 GLib.idle_add(on_worker_done, tasks)
+             except Exception as e:
+                 print(f"Error loading tasks: {e}")
 
-        def update_ui():
-            tasks = self.emby.get_scheduled_tasks()
-
+        def on_worker_done(tasks):
             # Clear existing items
             for child in self.tasks_listbox.get_children():
                 self.tasks_listbox.remove(child)
@@ -979,9 +1108,7 @@ class EmbyMonitorApp(Gtk.Window):
             self.tasks_listbox.show_all()
             return False
 
-        threading.Thread(
-            target=lambda: GLib.idle_add(update_ui), daemon=True
-        ).start()
+        threading.Thread(target=worker, daemon=True).start()
 
     def refresh_all(self):
         """Refresh all data."""
@@ -1005,6 +1132,17 @@ class EmbyMonitorApp(Gtk.Window):
         GLib.timeout_add_seconds(
             30, lambda: (self.load_server_status(), True)[1]
         )
+        
+        # Server time update every second
+        GLib.timeout_add_seconds(
+            1, lambda: (self.update_server_time(), True)[1]
+        )
+
+    def update_server_time(self):
+         """Update server time display."""
+         now = datetime.now()
+         if hasattr(self, 'time_label'):
+            self.time_label.set_markup(f"<small>🕒 {now.strftime('%H:%M:%S')}</small>")
 
     def update_statusbar(self, message):
         """Update statusbar message."""
@@ -1146,7 +1284,10 @@ class EmbyMonitorApp(Gtk.Window):
             overview_label.set_halign(Gtk.Align.START)
             overview_label.set_line_wrap(True)
             overview_label.set_max_width_chars(60)
-            overview_label.set_border_width(10)
+            overview_label.set_margin_top(10)
+            overview_label.set_margin_bottom(10)
+            overview_label.set_margin_start(10)
+            overview_label.set_margin_end(10)
             overview_frame.add(overview_label)
             details_vbox.pack_start(overview_frame, False, False, 0)
 
@@ -1239,9 +1380,16 @@ class EmbyMonitorApp(Gtk.Window):
         # Handle button responses
         response = dialog.run()
         if response == Gtk.ResponseType.APPLY:
-            # Open in Emby
+            # Open in Emby with correct Server ID
             import webbrowser
-            emby_url = f"{config.EMBY_SERVER_URL}/web/index.html#!/item?id={item_id}"
+            
+            # Get server ID
+            server_id = item_id # Fallback
+            sys_info = self.emby.get_system_info()
+            if sys_info:
+                server_id = sys_info.get("Id", item_id)
+                
+            emby_url = f"{config.EMBY_SERVER_URL}/web/index.html#!/item?id={item_id}&serverId={server_id}"
             webbrowser.open(emby_url)
 
         dialog.destroy()
@@ -1425,6 +1573,240 @@ class EmbyMonitorApp(Gtk.Window):
         row_box.pack_start(value, True, True, 0)
 
         container.pack_start(row_box, False, False, 0)
+
+
+    def create_cast_tab(self):
+        """Create the cast explorer tab."""
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        vbox.set_border_width(10)
+
+        # Search bar
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        
+        search_entry = Gtk.SearchEntry()
+        search_entry.set_placeholder_text("Search for actors, directors...")
+        search_entry.connect("search-changed", self.on_cast_search_changed)
+        hbox.pack_start(search_entry, True, True, 0)
+        
+        vbox.pack_start(hbox, False, False, 0)
+
+        # Scrolled window
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+
+        # FlowBox for grid layout
+        self.cast_flowbox = Gtk.FlowBox()
+        self.cast_flowbox.set_valign(Gtk.Align.START)
+        self.cast_flowbox.set_max_children_per_line(8)
+        self.cast_flowbox.set_min_children_per_line(2)
+        self.cast_flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.cast_flowbox.set_homogeneous(True)
+        self.cast_flowbox.set_column_spacing(15)
+        self.cast_flowbox.set_row_spacing(15)
+        scrolled.add(self.cast_flowbox)
+
+        vbox.pack_start(scrolled, True, True, 0)
+        
+        # Load initial cast
+        self.load_cast()
+
+        return vbox
+
+    def on_cast_search_changed(self, entry):
+        """Handle cast search input."""
+        query = entry.get_text()
+        self.load_cast(query)
+
+    def load_cast(self, query=None):
+        """Load cast members."""
+        self.show_progress()
+        
+        # Clear existing
+        for child in self.cast_flowbox.get_children():
+            self.cast_flowbox.remove(child)
+
+        def fetch_cast():
+            # Correctly call get_persons with labeled arguments
+            persons = self.emby.get_persons(limit=50, search_term=query)
+            
+            GLib.idle_add(self.populate_cast_grid, persons)
+
+        threading.Thread(target=fetch_cast, daemon=True).start()
+
+    def populate_cast_grid(self, persons):
+        """Populate the cast flowbox with person cards."""
+        self.hide_progress()
+        if not persons:
+            label = Gtk.Label(label="No people found.")
+            label.set_sensitive(False)
+            self.cast_flowbox.add(label)
+            self.cast_flowbox.show_all()
+            return
+
+        for person in persons:
+            card = self.create_person_card(person)
+            self.cast_flowbox.add(card)
+        
+        self.cast_flowbox.show_all()
+
+    def create_person_card(self, person):
+        """Create a card for a person."""
+        event_box = Gtk.EventBox()
+        event_box.connect("button-press-event", lambda w, e: self.show_person_details(person))
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        vbox.set_border_width(10)
+
+        # Image
+        image_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        image_box.set_size_request(150, 150)
+        image_box.set_halign(Gtk.Align.CENTER)
+        
+        image = Gtk.Image()
+        image.set_from_icon_name("avatar-default", Gtk.IconSize.DIALOG)
+        image_box.pack_start(image, True, False, 0)
+        vbox.pack_start(image_box, False, False, 0)
+
+        if person.get("Id"):
+            threading.Thread(
+                target=self.load_thumbnail,
+                args=(person["Id"], image, True),
+                daemon=True
+            ).start()
+
+        # Name
+        name_label = Gtk.Label(label=person.get("Name", "Unknown"))
+        name_label.set_justify(Gtk.Justification.CENTER)
+        name_label.set_line_wrap(True)
+        name_label.set_max_width_chars(15)
+        name_label.set_markup(f"<span weight='bold' size='10240'>{GLib.markup_escape_text(person.get('Name', 'Unknown'))}</span>")
+        vbox.pack_start(name_label, False, False, 0)
+
+        event_box.add(vbox)
+        return event_box
+
+    def show_person_details(self, person_data):
+        """Show detailed person information."""
+        person_id = person_data.get("Id")
+        if not person_id: return
+
+        # Fetch details
+        person = self.emby.get_item_details(person_id)
+        credits = self.emby.get_person_credits(person_id)
+
+        dialog = Gtk.Dialog(
+            title=person.get("Name", "Person Details"),
+            parent=self,
+            flags=0,
+            buttons=(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+        )
+        dialog.set_default_size(800, 600)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_border_width(10)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        content_box.set_border_width(10)
+
+        # Header: Image + Bio info
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        
+        # Image
+        img_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        img_box.set_size_request(200, 300)
+        image = Gtk.Image()
+        image.set_from_icon_name("avatar-default", Gtk.IconSize.DIALOG)
+        img_box.pack_start(image, False, False, 0)
+        hbox.pack_start(img_box, False, False, 0)
+        
+        threading.Thread(
+             target=self.load_thumbnail,
+             args=(person_id, image, True),
+             daemon=True
+        ).start()
+
+        # Info
+        info_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        
+        name = Gtk.Label(label=person.get("Name"))
+        name.set_halign(Gtk.Align.START)
+        name.modify_font(Pango.FontDescription("bold 18"))
+        info_vbox.pack_start(name, False, False, 0)
+
+        if person.get("PremiereDate"):
+             bdate = self.format_datetime(person["PremiereDate"]).split(' ')[0]
+             born = Gtk.Label()
+             born.set_markup(f"<b>Born:</b> {bdate}")
+             born.set_halign(Gtk.Align.START)
+             info_vbox.pack_start(born, False, False, 0)
+
+        if person.get("ProductionLocations"):
+             place = Gtk.Label()
+             place.set_markup(f"<b>Place of Birth:</b> {person['ProductionLocations'][0]}")
+             place.set_halign(Gtk.Align.START)
+             info_vbox.pack_start(place, False, False, 0)
+
+        if person.get("Overview"):
+            bio_scroll = Gtk.ScrolledWindow()
+            bio_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            bio_scroll.set_size_request(-1, 150)
+            
+            bio = Gtk.Label(label=person["Overview"])
+            bio.set_line_wrap(True)
+            bio.set_halign(Gtk.Align.START)
+            bio.set_valign(Gtk.Align.START)
+            bio.set_selectable(True)
+            bio_scroll.add(bio)
+            info_vbox.pack_start(bio_scroll, True, True, 0)
+
+        hbox.pack_start(info_vbox, True, True, 0)
+        content_box.pack_start(hbox, False, False, 0)
+
+        # Credits (Appears In)
+        if credits:
+            credits_frame = Gtk.Frame(label="Appears In")
+            credits_scroll = Gtk.ScrolledWindow()
+            credits_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
+            credits_scroll.set_size_request(-1, 220)
+            
+            credits_flow = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=15)
+            credits_flow.set_border_width(10)
+
+            for credit in credits:
+                 # Minimal movie card
+                 card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+                 card.set_size_request(120, -1)
+                 
+                 c_img = Gtk.Image()
+                 c_img.set_from_icon_name("video-x-generic", Gtk.IconSize.DIALOG)
+                 c_img.set_pixel_size(100) # approximate
+                 card.pack_start(c_img, False, False, 0)
+                 
+                 if credit.get("Id"):
+                     threading.Thread(
+                         target=self.load_thumbnail,
+                         args=(credit["Id"], c_img, False),
+                         daemon=True
+                     ).start()
+
+                 c_title = Gtk.Label(label=credit.get("Name", ""))
+                 c_title.set_line_wrap(True)
+                 c_title.set_justify(Gtk.Justification.CENTER)
+                 c_title.modify_font(Pango.FontDescription("9"))
+                 card.pack_start(c_title, False, False, 0)
+
+                 credits_flow.pack_start(card, False, False, 0)
+
+            credits_scroll.add(credits_flow)
+            credits_frame.add(credits_scroll)
+            content_box.pack_start(credits_frame, True, True, 0)
+
+        scrolled.add(content_box)
+        dialog.get_content_area().pack_start(scrolled, True, True, 0)
+        dialog.show_all()
+        dialog.run()
+        dialog.destroy()
 
 
 def main():

@@ -8,6 +8,8 @@ A native GTK3 desktop application for monitoring your Emby server with a beautif
 - **Tabbed Interface**:
   - 🔄 Current Processing - Real-time task monitoring with progress bars
   - ✅ Completed Tasks - Recently finished jobs
+  - 🎬 Media Browser - Smart filtering for all media types
+  - 👥 Cast Explorer - Browse actors and credits
   - 🎬 Indexed Media - Browse recently added content (50/100/200 items)
   - 📋 All Tasks - View all scheduled tasks
 - **Auto-Refresh**: Processing updates every 5 seconds, status every 30 seconds
@@ -45,9 +47,21 @@ sudo pacman -S python-gobject gtk3
 ```
 
 **Other Systems:**
-See: https://pygobject.readthedocs.io/en/latest/getting_started.html
+See: <https://pygobject.readthedocs.io/en/latest/getting_started.html>
 
 ## Installation
+
+### Automated Installation (Recommended)
+
+1. Run the installer script:
+
+   ```bash
+   ./install.sh
+   ```
+
+   This handles all system dependencies (GTK3), Python packages, virtual environment setup, and creates a desktop shortcut.
+
+### Manual Installation
 
   1. Clone or download this repository
 
@@ -57,14 +71,14 @@ See: https://pygobject.readthedocs.io/en/latest/getting_started.html
   pip install -r requirements.txt
   ```
 
-  3. Configure your Emby connection:
+  1. Configure your Emby connection:
 
   ```bash
   cp .env.example .env
   nano .env
   ```
 
-  4. Add your Emby server details to `.env`:
+  1. Add your Emby server details to `.env`:
      - `EMBY_SERVER_URL`: Your Emby server URL
      - `EMBY_API_KEY`: Your API key (Dashboard → Advanced → API Keys)
 
@@ -123,6 +137,21 @@ The application opens with a header showing:
 - Recently completed jobs
 - Execution duration
 - Completion timestamps
+
+**🎬 Media Browser**
+
+- **Smart Filtering**:
+  - "All Libraries" shows mainly Video content (Movies, Series, BoxSets)
+  - Specific Libraries unlock full content (including Music/Audio)
+- Browse entire Emby collection with thumbnails
+- Search and filter by library
+- **Performance**: Asynchronous multi-threaded loading for smooth UI
+
+**👥 Cast Explorer**
+
+- Browse actors and directors
+- Search for specific people
+- View detailed bio and filmography credits
 
 **🎬 Indexed Media**
 

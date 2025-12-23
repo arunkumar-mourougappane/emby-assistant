@@ -13,11 +13,10 @@ Monitor your Emby server with real-time information about server status, pending
 
 - **Server Status**: View server information including version, OS, online status, and live server time
 - **Cast Explorer**: Browse and search active persons (actors, directors) with bio and credits
-- **Movies Browser**: Filter movies by library with improved visual layout
+- **Media Browser**: Filter by library with smart content type support (Movies, TV, Music)
 - **Current Processing**: Monitor active tasks with real-time progress bars
 - **Recently Completed Tasks**: See recently finished jobs with duration
-- **Indexed Media**: Browse recently added media items to your library
-  - **Thumbnails**: Movies and videos display poster images automatically
+- **Indexed Media**: Browse recently added media items with poster thumbnails
 - **Auto-refresh**: Automatically updates processing status every 5 seconds
 - **Modern UI**: Clean, responsive web interface with Dark Mode support
 
@@ -31,21 +30,21 @@ Monitor your Emby server with real-time information about server status, pending
 
 1. Clone or download this repository
 
-2. Install dependencies:
+2. Run the automated installer:
 
    ```bash
-   pip install -r requirements.txt
+   ./install.sh
    ```
 
-3. Configure your Emby connection:
+   This script will:
+   - Check for system dependencies (GTK3)
+   - Set up a virtual environment
+   - Install all Python dependencies
+   - Install desktop shortcut
+   - Help you configure your `.env` file
 
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Edit the `.env` file with your Emby server details:
-   - `EMBY_SERVER_URL`: Your Emby server URL (e.g., `http://192.168.1.100:8096`)
-   - `EMBY_API_KEY`: Your API key (see below how to generate)
+3. Use your generated configuration:
+   - Edit `.env` with your `EMBY_SERVER_URL` and `EMBY_API_KEY`
 
 ### Getting an Emby API Key
 

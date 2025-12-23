@@ -37,8 +37,6 @@ pip install -r requirements.txt
 
 ### Templates & UI
 
-### Templates & UI
-
 - **`templates/index.html`** - Web UI Dashboard
 - **`templates/base.html`** - Base layout with navigation and scripts
 - **`templates/cast.html`** - Cast explorer page

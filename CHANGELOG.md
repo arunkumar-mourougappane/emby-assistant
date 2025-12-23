@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] - 2025-12-22
+## [v1.0.0] - 2025-12-22
 
 - **Cast & Crew Explorer**: Dedicated page (`/cast`) for browsing people
   - Search functionality to find actors/directors by name
@@ -8,10 +8,12 @@
     - Displays Biography, Birth Date, and Place of Birth
     - "Appears In" horizontal carousel of movie credits
   - Infinite scrolling support for cast lists
+  - **GTK Support**: Full feature parity in `app_gtk.py` with Grid layout and native dialogs
 
 - **Server Status Enhancements**:
   - Live Server Clock on Dashboard (updates every second)
   - Improved dark mode support for status cards
+  - **GTK Support**: Clock added to server info header
 
 ### Fixed
 

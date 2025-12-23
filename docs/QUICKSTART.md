@@ -2,62 +2,76 @@
 
 ## 🚀 Getting Started
 
-### Choose Your Version
+### 1. Installation (Recommended)
+
+Run the automated installer which handles dependencies and configuration for both versions:
+
+```bash
+./install.sh
+```
+
+### 2. Launch
 
 **Option 1: Interactive Launcher** (Recommended)
+
 ```bash
 ./launch.sh
 ```
+
 This will let you choose between Web or GTK version.
 
 **Option 2: Web Version** (Browser-based)
+
 ```bash
 ./start.sh
 ```
-Access at: http://localhost:5000
+
+Access at: <http://localhost:5000>
 
 **Option 3: GTK Desktop Version** (Native app)
+
 ```bash
 ./start_gtk.sh
 ```
+
 Desktop window opens automatically.
 
 See [COMPARISON.md](COMPARISON.md) for version differences.
 
-### 1. Install Dependencies
+### Manual Installation
+
+If you prefer to install manually:
 
 **For Web Version:**
+
 ```bash
 pip install -r requirements.txt
 ```
 
 **For GTK Version (Linux):**
-```bash
-# Install GTK3 first
-sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-3.0  # Ubuntu/Debian
-# OR
-sudo dnf install python3-gobject gtk3  # Fedora
-# OR
-sudo pacman -S python-gobject gtk3  # Arch
+Ensure GTK3 is installed (via apt/dnf/pacman) then run:
 
-# Then install Python deps
+```bash
 pip install -r requirements.txt
 ```
 
 ### 2. Configure Emby Connection
 
 Create a `.env` file:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` with your details:
+
 ```
 EMBY_SERVER_URL=http://your-emby-server:8096
 EMBY_API_KEY=your_api_key_here
 ```
 
 **To get an API Key:**
+
 1. Open Emby web interface
 2. Dashboard → Advanced → API Keys
 3. Click "+ New API Key"
@@ -66,11 +80,13 @@ EMBY_API_KEY=your_api_key_here
 ### 3. Run the Application
 
 **Option A - Interactive launcher (choose version):**
+
 ```bash
 ./launch.sh
 ```
 
 **Option B - Web version directly:**
+
 ```bash
 ./start.sh
 # or
@@ -78,6 +94,7 @@ python app.py
 ```
 
 **Option C - GTK desktop version:**
+
 ```bash
 ./start_gtk.sh
 # or
@@ -86,27 +103,31 @@ python app_gtk.py
 
 ### 4. Access the Dashboard
 
-**Web Version:** Open your browser at **http://localhost:5000**
+**Web Version:** Open your browser at **<http://localhost:5000>**
 
 **GTK Version:** Desktop window opens automatically
 
 ## 📊 Features
 
 ### Server Status
+
 - Server name, version, and OS
 - Real-time online/offline indicator
 
 ### Current Processing
+
 - Active tasks with progress bars
 - Auto-refreshes every 5 seconds
 - Shows task category and details
 
 ### Recently Completed Tasks
+
 - Last 15 completed tasks
 - Duration and completion time
 - Task category and status
 
 ### Indexed Media
+
 - Recently added media items
 - Switch between 50 and 100 items
 - Shows movies, series, and episodes
@@ -132,16 +153,20 @@ STATUS_REFRESH_INTERVAL=30
 ## 🔧 Troubleshooting
 
 ### Can't connect to Emby
+
 - Check `EMBY_SERVER_URL` is correct
 - Verify Emby server is running
 - Check firewall settings
 
 ### API Key not working
+
 - Regenerate API key in Emby
 - Make sure there are no extra spaces in `.env`
 
 ### Port already in use
+
 Change port in `.env`:
+
 ```
 FLASK_PORT=5001
 ```

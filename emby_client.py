@@ -285,6 +285,7 @@ class EmbyClient:
         sort_order: str = "Ascending",
         include_item_types: str = "Movie",
         start_index: int = 0,
+        search_term: Optional[str] = None,
     ) -> List[Dict]:
         """
         Get media items filtered by library with detailed metadata.
@@ -296,6 +297,7 @@ class EmbyClient:
             sort_order: Sort order
             include_item_types: Comma-separated list of item types (Movie, MusicAlbum, BoxSet, etc.)
             start_index: Starting index for pagination
+            search_term: Optional search term
 
         Returns:
             List of items with full metadata
@@ -313,6 +315,10 @@ class EmbyClient:
         # Add parent ID filter if specified
         if parent_id:
             params["ParentId"] = parent_id
+        
+        # Add search term if specified
+        if search_term:
+            params["SearchTerm"] = search_term
 
         result = self._make_request("/emby/Items", params=params)
         if result and "Items" in result:
