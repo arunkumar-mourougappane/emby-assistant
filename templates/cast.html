@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Cast - Emby Assistant{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+   <div class="col">
+      <h1 class="h2 mb-0">Cast & Crew</h1>
+      <p class="text-muted">Browse actors, directors, and other people</p>
+   </div>
+   <div class="col-auto">
+      <div class="input-group">
+         <span class="input-group-text bg-transparent border-end-0">
+            <i class="bi bi-search"></i>
+         </span>
+         <input type="text" class="form-control border-start-0 ps-0" id="castSearch" placeholder="Search people...">
+      </div>
+   </div>
+   <div class="col-auto">
+      <button class="btn btn-outline-primary" onclick="App.loadCast()">
+         <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+   </div>
+</div>
+
+<!-- Cast Container -->
+<div id="castContainer" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-4">
+   <!-- Cast members will be loaded here dynamically -->
+   <div class="col-12 text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+         <span class="visually-hidden">Loading...</span>
+      </div>
+   </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade" id="personDetailsModal" tabindex="-1" aria-hidden="true">
+   <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+         <div class="modal-header navbar-gradient text-white">
+            <h5 class="modal-title" id="personDetailsModalLabel">Person Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+         </div>
+         <div class="modal-body" id="personDetailsContent"></div>
+         <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+         </div>
+      </div>
+   </div>
+</div>
+{% endblock %}

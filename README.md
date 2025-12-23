@@ -11,13 +11,15 @@ Monitor your Emby server with real-time information about server status, pending
 
 ## Features
 
-- **Server Status**: View server information including version, OS, and online status
+- **Server Status**: View server information including version, OS, online status, and live server time
+- **Cast Explorer**: Browse and search active persons (actors, directors) with bio and credits
+- **Movies Browser**: Filter movies by library with improved visual layout
 - **Current Processing**: Monitor active tasks with real-time progress bars
 - **Recently Completed Tasks**: See recently finished jobs with duration
 - **Indexed Media**: Browse recently added media items to your library
   - **Thumbnails**: Movies and videos display poster images automatically
 - **Auto-refresh**: Automatically updates processing status every 5 seconds
-- **Modern UI**: Clean, responsive web interface
+- **Modern UI**: Clean, responsive web interface with Dark Mode support
 
 ## Prerequisites
 
@@ -67,7 +69,7 @@ python app.py
 ./start.sh
 ```
 
-2. Open your web browser and navigate to:
+1. Open your web browser and navigate to:
 
 ```text
 http://localhost:5000
@@ -112,7 +114,10 @@ You can configure the application using environment variables in the `.env` file
    ├── emby_client.py      # Emby API client (shared by both versions)
    ├── config.py           # Configuration loader (shared)
    ├── templates/
-   │   └── index.html      # Web UI template
+   │   ├── index.html      # Dashboard template
+   │   ├── base.html       # Base template with nav
+   │   ├── cast.html       # Cast page template
+   │   └── media.html      # Media library template
    ├── icon/               # Application icons (various sizes)
    ├── docs/               # Documentation
    │   ├── QUICKSTART.md   # Quick start guide
@@ -134,10 +139,14 @@ You can configure the application using environment variables in the `.env` file
 The application provides the following API endpoints:
 
 - `GET /api/status` - Server status information
+- `GET /api/server-time` - Live server time
 - `GET /api/current-processing` - Currently processing media
 - `GET /api/completed-tasks` - Recently completed tasks
 - `GET /api/indexed-media?limit=50` - Recently indexed media
 - `GET /api/all-tasks` - All scheduled tasks
+- `GET /api/cast` - List of cast members
+- `GET /api/person/<id>` - Person details (Bio, Birth info)
+- `GET /api/person/<id>/credits` - Person movie credits
 
 ## Troubleshooting
 

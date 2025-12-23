@@ -25,6 +25,18 @@ class EmbyClient:
             "X-Emby-Token": api_key,
             "Content-Type": "application/json"
         }
+        self.user_id = None
+
+    def _get_user_id(self) -> Optional[str]:
+        """Get the first available user ID."""
+        if self.user_id:
+            return self.user_id
+        
+        users = self._make_request("/emby/Users")
+        if users and isinstance(users, list) and len(users) > 0:
+            self.user_id = users[0].get("Id")
+            return self.user_id
+        return None
 
     def _make_request(
         self, endpoint: str, method: str = "GET", params: Optional[Dict] = None
@@ -60,6 +72,25 @@ class EmbyClient:
             if not (hasattr(e, 'response') and e.response and e.response.status_code == 404):
                 print(f"Error making request to {url}: {e}")
             return None
+
+    # ... (existing methods)
+
+    def get_item_details(self, item_id: str) -> Optional[Dict]:
+        """
+        Get detailed information about a specific item.
+
+        Args:
+            item_id: The item ID
+
+        Returns:
+            Detailed item information including metadata
+        """
+        user_id = self._get_user_id()
+        if user_id:
+             return self._make_request(f"/emby/Users/{user_id}/Items/{item_id}")
+        
+        # Fallback to generic endpoint if no user found (though likely to fail)
+        return self._make_request(f"/emby/Items/{item_id}")
 
     def get_system_info(self) -> Optional[Dict]:
         """Get server system information and status."""
@@ -233,17 +264,6 @@ class EmbyClient:
             return result["Items"]
         return []
 
-    def get_item_details(self, item_id: str) -> Optional[Dict]:
-        """
-        Get detailed information about a specific item.
-
-        Args:
-            item_id: The item ID
-
-        Returns:
-            Detailed item information including metadata
-        """
-        return self._make_request(f"/emby/Items/{item_id}")
 
     def get_libraries(self) -> List[Dict]:
         """
@@ -257,38 +277,102 @@ class EmbyClient:
             return result
         return []
 
-    def get_movies_by_library(
+    def get_items_by_library(
         self,
         parent_id: Optional[str] = None,
         limit: int = 100,
         sort_by: str = "SortName",
         sort_order: str = "Ascending",
+        include_item_types: str = "Movie",
+        start_index: int = 0,
     ) -> List[Dict]:
         """
-        Get movies filtered by library with detailed metadata.
+        Get media items filtered by library with detailed metadata.
 
         Args:
-            parent_id: Library/folder ID to filter by (None for all movies)
-            limit: Maximum number of movies to return
-            sort_by: Field to sort by (SortName, DateCreated, PremiereDate, etc.)
-            sort_order: Sort order (Ascending/Descending)
+            parent_id: Library/folder ID to filter by (None for all items)
+            limit: Maximum number of items to return
+            sort_by: Field to sort by
+            sort_order: Sort order
+            include_item_types: Comma-separated list of item types (Movie, MusicAlbum, BoxSet, etc.)
+            start_index: Starting index for pagination
 
         Returns:
-            List of movies with full metadata
+            List of items with full metadata
         """
         params = {
-            "IncludeItemTypes": "Movie",
+            "IncludeItemTypes": include_item_types,
             "Recursive": "true",
             "Limit": limit,
+            "StartIndex": start_index,
             "SortBy": sort_by,
             "SortOrder": sort_order,
-            "Fields": "Path,MediaStreams,Overview,Genres,People,CommunityRating,OfficialRating,RunTimeTicks,ProductionYear,PremiereDate,DateCreated,ParentId",
+            "Fields": "Path,MediaStreams,Overview,Genres,People,CommunityRating,OfficialRating,RunTimeTicks,ProductionYear,PremiereDate,DateCreated,ParentId,ImageTags",
         }
 
         # Add parent ID filter if specified
         if parent_id:
             params["ParentId"] = parent_id
 
+        result = self._make_request("/emby/Items", params=params)
+        if result and "Items" in result:
+            return result["Items"]
+        return []
+    def get_sessions(self) -> List[Dict]:
+        """
+        Get all active sessions.
+
+        Returns:
+            List of sessions
+        """
+        return self._make_request("/emby/Sessions") or []
+
+    def get_persons(
+        self,
+        limit: int = 100,
+        start_index: int = 0,
+        search_term: Optional[str] = None,
+    ) -> List[Dict]:
+        """
+        Get list of persons (actors, directors, etc.).
+
+        Args:
+            limit: Max items
+            start_index: Pagination start
+            search_term: Optional search query
+
+        Returns:
+            List of person items
+        """
+        params = {
+            "Limit": limit,
+            "StartIndex": start_index,
+            "SortBy": "SortName",
+            "SortOrder": "Ascending",
+            "Recursive": "true",
+            "Fields": "ImageTags,DateCreated",
+            "ExcludeItemTypes": "Series", 
+        }
+        if search_term:
+            params["SearchTerm"] = search_term
+
+        result = self._make_request("/emby/Persons", params=params)
+        if result and "Items" in result:
+            return result["Items"]
+        return []
+
+    def get_person_credits(self, person_id: str) -> List[Dict]:
+        """
+        Get items where the person appears (credits).
+        """
+        params = {
+            "PersonIds": person_id,
+            "IncludeItemTypes": "Movie,Series,MusicAlbum",
+            "Recursive": "true",
+            "Fields": "PrimaryImageAspectRatio,DateCreated,ProductionYear",
+            "SortBy": "ProductionYear",
+            "SortOrder": "Descending"
+        }
         result = self._make_request("/emby/Items", params=params)
         if result and "Items" in result:
             return result["Items"]

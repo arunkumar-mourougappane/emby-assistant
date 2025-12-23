@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Movies - Emby Assistant{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+   <div class="col">
+      <h1 class="h2 mb-0">Media Library</h1>
+      <p class="text-muted">Browse your collection</p>
+   </div>
+   <div class="col-auto">
+      <div class="input-group">
+         <span class="input-group-text bg-transparent border-end-0">
+            <i class="bi bi-search"></i>
+         </span>
+         <input type="text" class="form-control border-start-0 ps-0" id="mediaSearch" placeholder="Search...">
+      </div>
+   </div>
+   <div class="col-auto">
+      <button class="btn btn-outline-primary" onclick="App.loadLibrarySections()">
+         <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+   </div>
+</div>
+
+<!-- Libraries Container -->
+<div id="librariesContainer">
+   <!-- Libraries and their content will be loaded here dynamically -->
+   <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+         <span class="visually-hidden">Loading...</span>
+      </div>
+   </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade" id="movieDetailsModal" tabindex="-1" aria-hidden="true">
+   <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+         <div class="modal-header navbar-gradient text-white">
+            <h5 class="modal-title" id="movieDetailsModalLabel">Movie Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+         </div>
+         <div class="modal-body" id="movieDetailsContent"></div>
+         <div class="modal-footer">
+            <button class="btn btn-success" id="embyLinkBtn" style="display:none;">🔗 Open in Emby</button>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+         </div>
+      </div>
+   </div>
+</div>
+{% endblock %}

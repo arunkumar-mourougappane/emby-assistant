@@ -2,7 +2,30 @@
 
 ## [Unreleased] - 2025-12-22
 
+- **Cast & Crew Explorer**: Dedicated page (`/cast`) for browsing people
+  - Search functionality to find actors/directors by name
+  - Detailed Person Modal:
+    - Displays Biography, Birth Date, and Place of Birth
+    - "Appears In" horizontal carousel of movie credits
+  - Infinite scrolling support for cast lists
+
+- **Server Status Enhancements**:
+  - Live Server Clock on Dashboard (updates every second)
+  - Improved dark mode support for status cards
+
+### Fixed
+
+- **"Open in Emby" Link**:
+  - Fixed erroneous `localhost` URL generation
+  - Now uses correct configured Server URL
+  - Correctly maps `serverId` to the actual Emby System ID instead of Movie ID
+
+- **Layout Issues**:
+  - Fixed aspect ratio for person images
+  - Resolved infinite scroll jitter in media libraries
+
 ### Added
+
 - **Library-Based Movies Organization**: Movies now organized by Emby library structure
   - New `/api/libraries` endpoint for fetching available movie libraries
   - Library tabs in Web UI to filter movies by library
@@ -43,6 +66,7 @@
   - Easy access via "Server Details" button in header
 
 ### Changed
+
 - **Higher Quality Images with No Distortion**: Significant improvement to image loading and display
   - Web UI: Movie posters now use `maxHeight: 450px` and `quality: 95` (up from 150px/90)
   - Web UI: Person images now use `maxHeight: 200px` and `quality: 95` (up from 150px/90)
@@ -70,6 +94,7 @@
   - Images centered within their container boxes
 
 ### Fixed
+
 - **Error Handling**: Improved error handling for missing/deleted items
   - 404 errors for missing items are now handled silently without console spam
   - Better error messages when movie details cannot be loaded
@@ -78,12 +103,14 @@
 ### Technical Details
 
 #### Web UI Files
+
 - `templates/index.html`: Complete Bootstrap redesign + Movies browser with carousel
 - `static/css/bootstrap.min.css`: Bootstrap 5.3.2 CSS (228KB)
 - `static/js/bootstrap.bundle.min.js`: Bootstrap 5.3.2 JS bundle (80KB)
 - `static/js/jquery.min.js`: jQuery 3.7.1 (88KB)
 
 #### Backend Changes
+
 - `emby_client.py`:
   - Added `get_libraries()` method for fetching media libraries
   - Added `get_movies_by_library()` method for fetching movies with optional library filtering
@@ -107,6 +134,7 @@
   - Added Person badge color (#06b6d4)
 
 #### Image Handling
+
 - **Movies/Videos**: Up to 450px height, quality 95 (Web UI and GTK)
 - **Persons**: Up to 200px height, quality 95 (Web UI and GTK)
 - No width constraint - aspect ratio preserved automatically
@@ -116,15 +144,19 @@
 - Fallback icons: 🎬 for media, 👤 for persons
 
 ### Dependencies
+
 No new Python dependencies required. Static assets are self-contained.
 
 ### Browser Compatibility
+
 Bootstrap 5.3.2 supports:
+
 - Chrome, Firefox, Safari, Edge (latest versions)
 - iOS Safari 12+
 - Android Chrome
 
 ### Migration Notes
+
 - Old web UI completely replaced with Bootstrap version
 - No breaking changes to API endpoints
 - GTK app maintains same functionality with improved visuals

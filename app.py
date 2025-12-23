@@ -2,6 +2,7 @@
 
 # Standard library imports
 from datetime import datetime
+import re
 
 # Third-party imports
 from flask import Flask, jsonify, render_template, request
@@ -24,12 +25,55 @@ def get_emby_client() -> EmbyClient:
     return emby
 
 
+# Global variable to cache server ID
+emby_server_id = None
+
+
+@app.context_processor
+def inject_config():
+    """Inject configuration variables into templates."""
+    global emby_server_id
+    
+    if emby_server_id is None:
+        try:
+            client = get_emby_client()
+            # Basic system info is lightweight
+            info = client.get_system_info()
+            if info:
+                emby_server_id = info.get('Id')
+        except Exception as e:
+            print(f"Error fetching server ID: {e}")
+
+    return dict(
+        EMBY_SERVER_URL=config.EMBY_SERVER_URL,
+        EMBY_SERVER_ID=emby_server_id or ""
+    )
+
+
+def parse_iso_datetime(dt_str: str) -> datetime:
+    """Parse ISO datetime string with robust handling for fractional seconds."""
+    if not dt_str:
+        raise ValueError("Empty datetime string")
+
+    # Replace Z with UTC offset
+    dt_str = dt_str.replace("Z", "+00:00")
+
+    # Truncate fractional seconds to 6 digits (microseconds)
+    # This handles the Emby/DotNet 7-digit precision
+    if "." in dt_str:
+        # Regex to find the fractional part and truncate it
+        dt_str = re.sub(r"(\.\d{6})\d+", r"\1", dt_str)
+
+    return datetime.fromisoformat(dt_str)
+
+
 def format_datetime(dt_str: str) -> str:
     """Format datetime string to readable format."""
     if not dt_str:
         return "N/A"
     try:
-        dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+        dt = parse_iso_datetime(dt_str)
+        # Return without milliseconds
         return dt.strftime("%Y-%m-%d %H:%M:%S")
     except (ValueError, AttributeError):
         return dt_str
@@ -40,8 +84,8 @@ def calculate_duration(start_str: str, end_str: str) -> str:
     if not start_str or not end_str:
         return "N/A"
     try:
-        start = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
-        end = datetime.fromisoformat(end_str.replace("Z", "+00:00"))
+        start = parse_iso_datetime(start_str)
+        end = parse_iso_datetime(end_str)
         duration = end - start
 
         seconds = int(duration.total_seconds())
@@ -61,6 +105,9 @@ def calculate_duration(start_str: str, end_str: str) -> str:
 def index():
     """Main page."""
     return render_template("index.html")
+
+
+
 
 
 @app.route("/api/status")
@@ -141,8 +188,15 @@ def get_server_details():
             "completed_installations": system_info.get(
                 "CompletedInstallations", []
             ),
+            "server_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
     )
+
+
+@app.route("/api/server-time")
+def get_server_time():
+    """Get current server time."""
+    return jsonify({"server_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
 
 @app.route("/api/current-processing")
@@ -253,6 +307,59 @@ def get_all_tasks():
     return jsonify(formatted)
 
 
+@app.route("/api/now-playing")
+def get_now_playing():
+    """Get currently playing items."""
+    client = get_emby_client()
+    sessions = client.get_sessions()
+
+    active_sessions = []
+    for session in sessions:
+        if "NowPlayingItem" in session:
+            item = session["NowPlayingItem"]
+            play_state = session.get("PlayState", {})
+            transcoding_info = session.get("TranscodingInfo", {})
+            user_info = session.get("UserPrimaryImageTag", None)
+
+            # Metadata extraction
+            session_data = {
+                "session_id": session.get("Id"),
+                "user": session.get("UserName", "Unknown"),
+                "user_id": session.get("UserId", ""),
+                "device": session.get("DeviceName", "Unknown"),
+                "client": session.get("Client", "Unknown"),
+                "remote_endpoint": session.get("RemoteEndPoint", "Unknown"),
+                "item": {
+                    "id": item.get("Id"),
+                    "name": item.get("Name"),
+                    "type": item.get("Type"),
+                    "series_name": item.get("SeriesName", ""),
+                    "season": item.get("ParentIndexNumber", ""),
+                    "episode": item.get("IndexNumber", ""),
+                    "year": item.get("ProductionYear", ""),
+                    "runtime_ticks": item.get("RunTimeTicks", 0),
+                    "primary_image_tag": item.get("ImageTags", {}).get("Primary"),
+                    "backdrop_image_tag": item.get("BackdropImageTags", [None])[0],
+                },
+                "play_state": {
+                    "position_ticks": play_state.get("PositionTicks", 0),
+                    "is_paused": play_state.get("IsPaused", False),
+                    "play_method": play_state.get("PlayMethod", "Unknown"),
+                },
+                "transcoding": {
+                    "is_transcoding": transcoding_info is not None,
+                    "video_codec": transcoding_info.get("VideoCodec", "Direct") if transcoding_info else "Direct",
+                    "audio_codec": transcoding_info.get("AudioCodec", "Direct") if transcoding_info else "Direct",
+                    "container": transcoding_info.get("Container", "") if transcoding_info else "",
+                    "bitrate": transcoding_info.get("Bitrate", 0) if transcoding_info else 0,
+                    "reasons": transcoding_info.get("TranscodeReasons", []) if transcoding_info else [],
+                }
+            }
+            active_sessions.append(session_data)
+
+    return jsonify(active_sessions)
+
+
 @app.route("/api/image/<item_id>")
 def get_image(item_id):
     """Proxy images from Emby server with fallback to thumbnails."""
@@ -348,63 +455,94 @@ def get_libraries():
     client = get_emby_client()
     libraries = client.get_libraries()
 
-    # Filter to only include movie libraries
-    movie_libraries = []
+    # Filter to only include media libraries (exclude special folders if any, but maintainer wanted generic)
+    media_libraries = []
     for lib in libraries:
-        # Check if library contains movies
-        if lib.get("CollectionType") == "movies":
-            movie_libraries.append(
-                {
-                    "id": lib.get("ItemId", ""),
-                    "name": lib.get("Name", "Unknown"),
-                    "collection_type": lib.get("CollectionType", ""),
-                }
-            )
+        # Include all libraries that are collections (movies, tvshows, music, boxsets, etc.)
+        # Defaulting to include everything returned by VirtualFolders
+        media_libraries.append(
+            {
+                "id": lib.get("ItemId", ""),
+                "name": lib.get("Name", "Unknown"),
+                "collection_type": lib.get("CollectionType", "mixed"),
+            }
+        )
 
-    return jsonify(movie_libraries)
+    return jsonify(media_libraries)
 
 
-@app.route("/api/movies")
-def get_movies():
-    """Get movies with metadata, optionally filtered by library."""
+@app.route("/media")
+def media():
+    """Media browser page."""
+    return render_template("media.html")
+
+
+
+
+
+@app.route("/api/media")
+def get_media():
+    """Get media items with metadata, optionally filtered by library."""
     client = get_emby_client()
     limit = request.args.get("limit", 100, type=int)
     sort_by = request.args.get("sortBy", "SortName")
     sort_order = request.args.get("sortOrder", "Ascending")
     library_id = request.args.get("libraryId", None)
+    collection_type = request.args.get("collectionType", "movies")
+    start_index = request.args.get("startIndex", 0, type=int)
 
-    # Use the new method that supports library filtering
-    movies = client.get_movies_by_library(
-        parent_id=library_id, limit=limit, sort_by=sort_by, sort_order=sort_order
+    # Map collection type to Emby Item Types
+    item_types = "Movie" # Default
+    if collection_type == "music":
+        item_types = "MusicAlbum"
+    elif collection_type == "tvshows":
+        item_types = "Series"
+    elif collection_type == "boxsets":
+        item_types = "BoxSet"
+    
+    # Use the new generic method
+    items = client.get_items_by_library(
+        parent_id=library_id, 
+        limit=limit, 
+        sort_by=sort_by, 
+        sort_order=sort_order,
+        include_item_types=item_types,
+        start_index=start_index
     )
 
-    # Format the data - only include movies with valid IDs
+    # Format the data
     formatted = []
-    for movie in movies:
-        # Skip movies without IDs (shouldn't happen but just in case)
-        movie_id = movie.get("Id", "")
-        if not movie_id:
+    for item in items:
+        # Skip items without IDs
+        item_id = item.get("Id", "")
+        if not item_id:
             continue
 
         # Calculate runtime
-        runtime_ticks = movie.get("RunTimeTicks", 0)
+        runtime_ticks = item.get("RunTimeTicks", 0)
         runtime_minutes = int(runtime_ticks / 10000000 / 60) if runtime_ticks else 0
+
+        # Get primary image tag
+        image_tags = item.get("ImageTags", {})
+        primary_image_tag = image_tags.get("Primary")
 
         formatted.append(
             {
-                "id": movie_id,
-                "name": movie.get("Name", "Unknown"),
-                "year": movie.get("ProductionYear", ""),
-                "overview": movie.get("Overview", ""),
-                "genres": movie.get("Genres", []),
-                "community_rating": movie.get("CommunityRating", 0),
-                "official_rating": movie.get("OfficialRating", ""),
+                "id": item_id,
+                "name": item.get("Name", "Unknown"),
+                "year": item.get("ProductionYear", ""),
+                "overview": item.get("Overview", ""),
+                "genres": item.get("Genres", []),
+                "community_rating": item.get("CommunityRating", 0),
+                "official_rating": item.get("OfficialRating", ""),
                 "runtime_minutes": runtime_minutes,
-                "path": movie.get("Path", "N/A"),
-                "premiere_date": format_datetime(movie.get("PremiereDate", "")),
-                "date_created": format_datetime(movie.get("DateCreated", "")),
-                "people": movie.get("People", [])[:5],  # Limit to top 5 cast
-                "parent_id": movie.get("ParentId", ""),
+                "path": item.get("Path", "N/A"),
+                "premiere_date": format_datetime(item.get("PremiereDate", "")),
+                "date_created": format_datetime(item.get("DateCreated", "")),
+                "people": item.get("People", [])[:5],  # Limit to top 5 cast
+                "parent_id": item.get("ParentId", ""),
+                "type": item.get("Type", "Unknown"), # Include type for frontend logic
+                "primary_image_tag": primary_image_tag
             }
         )
 
@@ -456,6 +594,86 @@ def get_item_details(item_id):
 def format_datetime_filter(dt_str):
     """Template filter for formatting datetime."""
     return format_datetime(dt_str)
+
+
+@app.route("/cast")
+def cast_page():
+    """Cast browser page."""
+    return render_template("cast.html")
+
+
+@app.route("/api/cast")
+def get_cast():
+    """Get list of people."""
+    client = get_emby_client()
+    limit = request.args.get("limit", 100, type=int)
+    start_index = request.args.get("startIndex", 0, type=int)
+    search_term = request.args.get("searchTerm", None)
+
+    people = client.get_persons(limit=limit, start_index=start_index, search_term=search_term)
+
+    formatted = []
+    for person in people:
+        image_tags = person.get("ImageTags", {})
+        primary_image_tag = image_tags.get("Primary")
+        
+        formatted.append({
+            "id": person.get("Id"),
+            "name": person.get("Name"),
+            "primary_image_tag": primary_image_tag,
+            "type": person.get("Type")
+        })
+    
+    return jsonify(formatted)
+
+
+@app.route("/api/person/<person_id>")
+def get_person_details(person_id):
+    """Get detailed information about a specific person."""
+    client = get_emby_client()
+    person = client.get_item_details(person_id)
+
+    if not person:
+        return jsonify({"error": "Person not found"}), 404
+
+    # Emby stores Bio in 'Overview'
+    # BirthDate in 'PremiereDate'
+    # BirthPlace in 'ProductionLocations' (list)
+
+    birth_place = "Unknown"
+    if person.get("ProductionLocations"):
+        birth_place = person["ProductionLocations"][0]
+    
+    return jsonify({
+        "id": person.get("Id"),
+        "name": person.get("Name"),
+        "overview": person.get("Overview", ""),
+        "birth_date": format_datetime(person.get("PremiereDate", "")),
+        "birth_place": birth_place,
+        "primary_image_tag": person.get("ImageTags", {}).get("Primary")
+    })
+
+
+@app.route("/api/person/<person_id>/credits")
+def get_person_credits(person_id):
+    """Get movies/series a person is in."""
+    client = get_emby_client()
+    items = client.get_person_credits(person_id)
+    
+    formatted = []
+    for item in items:
+        image_tags = item.get("ImageTags", {})
+        primary_image_tag = image_tags.get("Primary")
+        
+        formatted.append({
+            "id": item.get("Id"),
+            "name": item.get("Name"),
+            "year": item.get("ProductionYear", ""),
+            "type": item.get("Type"),
+            "primary_image_tag": primary_image_tag
+        })
+        
+    return jsonify(formatted)
 
 
 if __name__ == "__main__":

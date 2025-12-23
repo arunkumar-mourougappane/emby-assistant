@@ -1,0 +1,341 @@
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-color: #212529;
+    --muted-color: #6c757d;
+    --border-color: #e5e7eb;
+}
+
+[data-bs-theme="dark"] {
+    --primary-color: #768bf0;
+    --secondary-color: #906ec1;
+    --bg-color: #212529;
+    --card-bg: #2c3035;
+    --text-color: #f8f9fa;
+    --muted-color: #adb5bd;
+    --border-color: #373b3e;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    padding-top: 70px;
+    /* For fixed navbar */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar-gradient {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.header-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    color: var(--text-color);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.status-online {
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+}
+
+.status-offline {
+    background: #ef4444;
+    box-shadow: 0 0 10px #ef4444;
+}
+
+.info-badge {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-block;
+    margin: 5px;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 25px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 2px solid var(--border-color);
+    padding: 15px 20px;
+    font-weight: 600;
+}
+
+.task-item {
+    background: var(--bg-color);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--primary-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.task-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.badge-custom {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.badge-running {
+    background-color: #10b981;
+    color: white;
+}
+
+.badge-completed {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.badge-movie {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.badge-episode {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+.badge-series {
+    background-color: #ec4899;
+    color: white;
+}
+
+.badge-person {
+    background-color: #06b6d4;
+    color: white;
+}
+
+.pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.btn-refresh {
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    background: transparent;
+    transition: all 0.2s;
+}
+
+.btn-refresh:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Movie Card Styles */
+.movie-card {
+    flex: 0 0 200px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: var(--text-color);
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.movie-poster {
+    width: 200px;
+    height: 300px;
+    object-fit: cover;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+    color: #9ca3af;
+}
+
+.movie-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+#libraryTabs .nav-link {
+    color: var(--muted-color);
+}
+
+#libraryTabs .nav-link.active {
+    color: var(--primary-color);
+    border-color: var(--border-color) var(--border-color) var(--card-bg);
+}
+
+\n
+
+/* Dashboard Widgets */
+.dashboard-widget-scrollable {
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) var(--card-bg);
+}
+
+.dashboard-widget-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dashboard-widget-scrollable::-webkit-scrollbar-track {
+    background: var(--card-bg);
+}
+
+.dashboard-widget-scrollable::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 3px;
+}
+
+/* Fixed Height Widget */
+.scrollable-30vh {
+    height: 30vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) var(--card-bg);
+}
+
+.scrollable-30vh::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollable-30vh::-webkit-scrollbar-track {
+    background: var(--card-bg);
+}
+
+.scrollable-30vh::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 3px;
+}
+
+/* Theme-aware List Item Background */
+.list-item-bg {
+    background-color: rgba(0, 0, 0, 0.03);
+    /* Light mode default */
+}
+
+[data-bs-theme="dark"] .list-item-bg {
+    background-color: rgba(255, 255, 255, 0.05);
+    /* Dark mode override */
+}
+/* Horizontal Scroll Container for Library Items */
+.horizontal-scroll-container {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, auto);
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    scrollbar-width: thin; /* Firefox */
+}
+
+/* Webkit scrollbar styling for better aesthetics */
+.horizontal-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--bs-secondary-bg);
+    border-radius: 4px;
+}
+
+/* Ensure items have a fixed width in the grid */
+.media-card-item {
+    width: 200px;
+    flex: 0 0 auto;
+}
+
+/* Cast Carousel Horizontal Scroll */
+.cast-carousel {
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+}
+
+.cast-carousel::-webkit-scrollbar {
+    height: 8px;
+}
+
+.cast-carousel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cast-carousel::-webkit-scrollbar-thumb {
+    background-color: var(--bs-secondary-bg);
+    border-radius: 4px;
+}
+
+.cast-member {
+    flex: 0 0 100px; /* Fixed width for cast members */
+    text-align: center;
+}
+
+.cast-member img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.cast-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+}
+
+.cast-role {
+    font-size: 0.75rem;
+    color: var(--muted-color);
+}
